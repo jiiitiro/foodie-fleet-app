@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>FoodieFleet - Register</title>
+</head>
+<body>
+<h2>Create an Account</h2>
+<div th:if="${errorMessage}" style="color:red;" th:text="${errorMessage}"></div>
+
+<form th:action="@{/auth/register}" th:object="${registerRequest}" method="post">
+    <label>Full Name: <input type="text" th:field="*{fullName}" required /></label><br/><br/>
+    <label>Email: <input type="email" th:field="*{email}" required /></label><br/><br/>
+    <label>Password: <input type="password" th:field="*{password}" required /></label><br/><br/>
+    <label>Phone Number: <input type="text" th:field="*{phoneNumber}" /></label><br/><br/>
+    <label>Role:
+        <select th:field="*{role}">
+            <option value="CUSTOMER">Customer</option>
+            <option value="RESTAURANT_OWNER">Restaurant Owner</option>
+            <option value="DRIVER">Delivery Driver</option>
+        </select>
+    </label><br/><br/>
+    <button type="submit">Register</button>
+</form>
+<p>Already have an account? <a th:href="@{/auth/login}">Log in here</a></p>
+</body>
+</html>

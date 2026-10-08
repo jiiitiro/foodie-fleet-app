@@ -6,12 +6,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
-@RequestMapping("/restaurant")
-public class RestaurantController {
+@RequestMapping("/driver")
+public class DriverController {
 
-    @GetMapping("/dashboard")
+    @GetMapping("/deliveries")
     @ResponseBody
-    public String restaurantDashboard() {
-        return "<h1>Restaurant Owner Dashboard</h1><p>Menu and Order management coming soon in Phase 3.</p>";
+    public String driverDeliveries() {
+        return "<h1>Driver Delivery Portal</h1><p>Active delivery jobs coming soon in Phase 3.</p>";
     }
 }
