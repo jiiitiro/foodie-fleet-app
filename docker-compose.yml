@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: foodiefleet-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - foodiefleet_pgdata:/var/lib/postgresql/data
+    networks:
+      - foodiefleet-net
+
+volumes:
+  foodiefleet_pgdata:
+
+networks:
+  foodiefleet-net:
+    driver: bridge
