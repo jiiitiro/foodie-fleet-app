@@ -52,4 +52,15 @@ public class AuthController {
         }
         return "redirect:/";
     }
+
+    @GetMapping("/verify")
+    public String verifyAccount(@RequestParam("token") String token) {
+        boolean isVerified = authService.verifyToken(token);
+        if (isVerified) {
+            return "redirect:/auth/login?verified=true";
+        } else {
+            return "redirect:/auth/login?error=invalid_token";
+        }
+    }
+
 }

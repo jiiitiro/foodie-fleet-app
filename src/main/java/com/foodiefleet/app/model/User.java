@@ -33,7 +33,7 @@ public class User {
     private Role role;
 
     @Builder.Default
-    private Boolean enabled = true;
+    private Boolean enabled = false;
     private LocalDateTime createdAt;
 
     @PrePersist
