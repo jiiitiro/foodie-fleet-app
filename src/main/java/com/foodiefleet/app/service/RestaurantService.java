@@ -2,22 +2,27 @@ package com.foodiefleet.app.service;
 
 import com.foodiefleet.app.dto.request.MenuItemRequest;
 import com.foodiefleet.app.dto.request.RestaurantRequest;
+import com.foodiefleet.app.exception.ConflictException;
 import com.foodiefleet.app.exception.ResourceNotFoundException;
 import com.foodiefleet.app.model.MenuItem;
 import com.foodiefleet.app.model.Order;
 import com.foodiefleet.app.model.OrderStatus;
 import com.foodiefleet.app.model.Restaurant;
+import com.foodiefleet.app.model.Role;
 import com.foodiefleet.app.model.User;
 import com.foodiefleet.app.repository.MenuItemRepository;
+import com.foodiefleet.app.repository.OrderItemRepository;
 import com.foodiefleet.app.repository.OrderRepository;
 import com.foodiefleet.app.repository.RestaurantRepository;
-import com.foodiefleet.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
+// Every operation is scoped to the given owner. Resources belonging to another owner are
+// reported as "not found" (404) so their existence isn't revealed (SECURITY.md S2).
 @Service
 @RequiredArgsConstructor
 public class RestaurantService {
@@ -25,22 +30,19 @@ public class RestaurantService {
     private final RestaurantRepository restaurantRepository;
     private final MenuItemRepository menuItemRepository;
     private final OrderRepository orderRepository;
-    private final UserRepository userRepository;
+    private final OrderItemRepository orderItemRepository;
 
     // --- RESTAURANT PROFILE MANAGEMENT ---
 
     @Transactional(readOnly = true)
-    public Restaurant getRestaurantByOwner(Long ownerId) {
-        return restaurantRepository.findByOwnerId(ownerId).orElse(null);
+    public Optional<Restaurant> findRestaurant(User owner) {
+        return restaurantRepository.findByOwner(owner);
     }
 
     @Transactional
-    public Restaurant saveOrUpdateProfile(Long ownerId, RestaurantRequest request) {
-        User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", ownerId));
-
-        Restaurant restaurant = restaurantRepository.findByOwnerId(ownerId)
-                .orElse(Restaurant.builder().owner(owner).build());
+    public Restaurant saveOrUpdateProfile(User owner, RestaurantRequest request) {
+        Restaurant restaurant = restaurantRepository.findByOwner(owner)
+                .orElseGet(() -> Restaurant.builder().owner(owner).build());
 
         restaurant.setName(request.getName());
         restaurant.setDescription(request.getDescription());
@@ -51,20 +53,29 @@ public class RestaurantService {
         return restaurantRepository.save(restaurant);
     }
 
+    @Transactional
+    public Restaurant toggleOpen(User owner) {
+        Restaurant restaurant = requireRestaurant(owner);
+        restaurant.setActive(!Boolean.TRUE.equals(restaurant.getActive()));
+        return restaurant;
+    }
+
     // --- MENU ITEM CRUD ---
 
     @Transactional(readOnly = true)
-    public List<MenuItem> getMenuItems(Long restaurantId) {
-        return menuItemRepository.findByRestaurantId(restaurantId);
+    public List<MenuItem> getMenuItems(Restaurant restaurant) {
+        return menuItemRepository.findByRestaurantOrderByNameAsc(restaurant);
+    }
+
+    @Transactional(readOnly = true)
+    public MenuItem getMenuItem(User owner, Long itemId) {
+        return requireOwnedMenuItem(owner, itemId);
     }
 
     @Transactional
-    public MenuItem addMenuItem(Long restaurantId, MenuItemRequest request) {
-        Restaurant restaurant = restaurantRepository.findById(restaurantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Restaurant", restaurantId));
-
+    public MenuItem addMenuItem(User owner, MenuItemRequest request) {
         MenuItem item = MenuItem.builder()
-                .restaurant(restaurant)
+                .restaurant(requireRestaurant(owner))
                 .name(request.getName())
                 .description(request.getDescription())
                 .price(request.getPrice())
@@ -76,9 +87,8 @@ public class RestaurantService {
     }
 
     @Transactional
-    public MenuItem updateMenuItem(Long itemId, MenuItemRequest request) {
-        MenuItem item = menuItemRepository.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Menu item", itemId));
+    public MenuItem updateMenuItem(User owner, Long itemId, MenuItemRequest request) {
+        MenuItem item = requireOwnedMenuItem(owner, itemId);
 
         item.setName(request.getName());
         item.setDescription(request.getDescription());
@@ -86,34 +96,56 @@ public class RestaurantService {
         item.setImageUrl(request.getImageUrl());
         item.setAvailable(request.isAvailable());
 
-        return menuItemRepository.save(item);
+        return item;
     }
 
     @Transactional
-    public void toggleItemAvailability(Long itemId) {
-        MenuItem item = menuItemRepository.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Menu item", itemId));
+    public void toggleItemAvailability(User owner, Long itemId) {
+        MenuItem item = requireOwnedMenuItem(owner, itemId);
         item.setAvailable(!item.isAvailable());
-        menuItemRepository.save(item);
     }
 
     @Transactional
-    public void deleteMenuItem(Long itemId) {
-        menuItemRepository.deleteById(itemId);
+    public void deleteMenuItem(User owner, Long itemId) {
+        MenuItem item = requireOwnedMenuItem(owner, itemId);
+        // Past orders reference the item (and its price at purchase), so it can't be removed
+        if (orderItemRepository.existsByMenuItem(item)) {
+            throw new ConflictException("\"" + item.getName()
+                    + "\" appears in past orders and can't be deleted. Mark it unavailable instead.");
+        }
+        item.getRestaurant().getMenuItems().remove(item);
+        menuItemRepository.delete(item);
     }
 
     // --- RESTAURANT DASHBOARD ORDERS ---
 
     @Transactional(readOnly = true)
-    public List<Order> getIncomingOrders(Long restaurantId) {
-        return orderRepository.findByRestaurantId(restaurantId);
+    public List<Order> getIncomingOrders(Restaurant restaurant) {
+        return orderRepository.findByRestaurantOrderByCreatedAtDesc(restaurant);
     }
 
     @Transactional
-    public void updateOrderStatus(Long orderId, OrderStatus newStatus) {
-        Order order = orderRepository.findById(orderId)
+    public Order updateOrderStatus(User owner, Long orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findByIdAndRestaurant_Owner_Id(orderId, owner.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+
+        if (!order.getStatus().canTransitionTo(newStatus, Role.RESTAURANT_OWNER)) {
+            throw new ConflictException("Order #" + orderId + " can't move from "
+                    + order.getStatus() + " to " + newStatus + ".");
+        }
         order.setStatus(newStatus);
-        orderRepository.save(order);
+        return order;
+    }
+
+    // --- HELPERS ---
+
+    private Restaurant requireRestaurant(User owner) {
+        return restaurantRepository.findByOwner(owner)
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant for owner", owner.getId()));
+    }
+
+    private MenuItem requireOwnedMenuItem(User owner, Long itemId) {
+        return menuItemRepository.findByIdAndRestaurant_Owner_Id(itemId, owner.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Menu item", itemId));
     }
 }

@@ -1,6 +1,7 @@
 package com.foodiefleet.app.controller;
 
 import com.foodiefleet.app.dto.request.RegisterRequest;
+import com.foodiefleet.app.model.Role;
 import com.foodiefleet.app.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,9 @@ public class AuthController {
 
     @GetMapping("/register")
     public String registerPage(Model model) {
-        model.addAttribute("registerRequest", new RegisterRequest());
+        RegisterRequest request = new RegisterRequest();
+        request.setRole(Role.CUSTOMER); // pre-selects the most common role
+        model.addAttribute("registerRequest", request);
         return "auth/register";
     }
 

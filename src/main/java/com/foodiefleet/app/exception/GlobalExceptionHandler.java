@@ -31,6 +31,11 @@ public class GlobalExceptionHandler {
         return errorView(HttpStatus.BAD_REQUEST, message);
     }
 
+    @ExceptionHandler(ConflictException.class)
+    public ModelAndView handleConflict(ConflictException ex) {
+        return errorView(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ModelAndView handleBadRequest(IllegalArgumentException ex) {
         log.debug("Bad request: {}", ex.getMessage());

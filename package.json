@@ -1,0 +1,13 @@
+{
+  "name": "foodiefleet-frontend",
+  "private": true,
+  "description": "Tailwind CSS build for the FoodieFleet Thymeleaf templates",
+  "scripts": {
+    "build:css": "tailwindcss -i src/main/frontend/app.css -o src/main/resources/static/css/app.css --minify",
+    "watch:css": "tailwindcss -i src/main/frontend/app.css -o src/main/resources/static/css/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.3",
+    "tailwindcss": "4.3.3"
+  }
+}

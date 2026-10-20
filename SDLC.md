@@ -34,7 +34,7 @@ Detailed documentation for each SDLC stage lives in [`docs/`](docs):
 | `ADMIN` | Moderate users and restaurants, view platform metrics |
 
 **Tech stack:** Java 17 · Spring Boot 3.2.5 (Web, Security, Data JPA, Mail,
-Thymeleaf) · PostgreSQL 15 · Lombok · Maven · Docker / Docker Compose.
+Thymeleaf + Layout Dialect) · Tailwind CSS 4 · PostgreSQL 15 · Lombok · Maven · Docker / Docker Compose.
 
 **Architecture style:** server-rendered MVC monolith (Thymeleaf + session-based
 Spring Security). A REST/JWT API is planned for a later phase (see M8).
@@ -52,17 +52,18 @@ Spring Security). A REST/JWT API is planned for a later phase (see M8).
 | Registration + login | ✅ Done | BCrypt, form login, role-based redirect after login |
 | Email verification | ✅ Done | Async email over Gmail SMTP, token valid for 24 h |
 | RBAC route guards | ✅ Done | `/customer/**`, `/restaurant/**`, `/driver/**`, `/admin/**` |
-| Restaurant owner module | 🟡 In progress (uncommitted) | Controller + service written; templates missing |
+| Restaurant owner module | ✅ Done (M2) | Setup, dashboard, menu CRUD, order handling; ownership-scoped |
 | Customer module | ⬜ Placeholder | Returns a hard-coded HTML string |
 | Driver module | ⬜ Placeholder | Returns a hard-coded HTML string |
 | Admin module | ⬜ Not started | Route exists in security config only |
 | Orders | ⬜ Not started | `OrderService`, `CreateOrderRequest`, `OrderResponse` are empty files |
 | Error handling | ✅ Done (M1.5) | `GlobalExceptionHandler` + `error.html` |
 | JWT | ⬜ Deferred to M8 | Empty stubs removed in M1.5 |
-| Tests | 🟡 Started (M1.5) | 18 tests: auth unit tests + security/registration integration tests on Testcontainers |
+| Tests | 🟡 Growing | 41 tests: auth + order-status unit tests; security, page-rendering and restaurant-owner integration tests on Testcontainers |
 | CI/CD | ⬜ None | |
 | DB migrations | ✅ Done (M1.5) | Flyway `V1__init.sql`; Hibernate `ddl-auto=validate` |
 | Containerisation | ✅ Done | Multi-stage Dockerfile + Compose (app on 8081, DB on 5433) |
+| UI design system | ✅ Done (M2.5) | Tailwind CSS 4 built by Maven; shared layouts, components, responsive pages |
 
 ### 2.2 Defects found (must fix before new features)
 
@@ -113,7 +114,8 @@ gantt
     section Next
     M1.5 Stabilisation         :active,  m15, 2026-10-21, 7d
     M2 Restaurant owner        :         m2, after m15, 7d
-    M3 Customer ordering       :         m3, after m2, 14d
+    M2.5 UI design system      :         m25, after m2, 3d
+    M3 Customer ordering       :         m3, after m25, 14d
     M4 Driver delivery         :         m4, after m3, 7d
     M5 Admin                   :         m5, after m4, 7d
     M6 Hardening & CI/CD       :         m6, after m5, 7d
@@ -154,15 +156,44 @@ against a fresh database. Existing dev databases created by `ddl-auto=update` mu
 errors; S1 is closed and has a regression test.
 
 ### M2 — Restaurant owner module
-- [ ] Resolve the current user properly: load `User` by `userDetails.getUsername()` (fixes D4)
-- [ ] **S2**: ownership checks in `RestaurantService` for every menu/order mutation
-- [ ] Templates: `restaurant/setup.html`, `restaurant/dashboard.html` (fixes D8)
-- [ ] Restaurant `active` flag (open/closed) persisted
-- [ ] Menu CRUD with validation (price > 0, name required)
-- [ ] Incoming orders list; owner can move `PLACED → ACCEPTED → PREPARING → READY_FOR_PICKUP` or `CANCELLED`
-- [ ] Order-status transitions enforced by a state machine (see [architecture](docs/02-architecture.md#order-lifecycle))
+- [x] Resolve the current user properly: `CurrentUserService` loads `User` by the principal's email (fixes D4)
+- [x] **S2**: every menu/order operation is scoped to the logged-in owner; other owners' resources return 404
+- [x] Templates: `restaurant/setup.html`, `restaurant/dashboard.html`, `restaurant/menu-edit.html` (fixes D8)
+- [x] Restaurant `active` flag (open/closed) persisted, with an Open/Close button
+- [x] Menu CRUD with validation (price > 0, name required); items in past orders can't be deleted (mark unavailable instead)
+- [x] Incoming orders list; owner can move `PLACED → ACCEPTED → PREPARING → READY_FOR_PICKUP` or `CANCELLED`
+- [x] Order-status transitions enforced by a state machine (`OrderStatus.nextStatusesFor(Role)`)
+
+**Status (2026-10-21):** ✅ done and manually tested: setup, profile, open/close, menu CRUD and
+validation all work. 16 new automated tests, including wrong-owner cases for every endpoint.
+The order-handling buttons are covered by automated tests only. Customers can't place orders until
+M3, so the **manual test of the order flow is deferred to the M3 acceptance test**.
 
 **DoD:** owner A cannot read or modify owner B's data (test-proven); all actions available in the UI.
+
+### M2.5 — UI design system (Tailwind + Thymeleaf)
+Goal: one consistent, responsive look across every page, so M3–M5 build screens from shared
+parts instead of starting from scratch each time.
+
+- [x] Tailwind CSS 4 compiled at build time: `frontend-maven-plugin` installs Node, runs `npm ci` and `npm run build:css`, and the output (`static/css/app.css`) is bundled into the jar and Docker image. No CDN script.
+- [x] Design tokens in `src/main/frontend/app.css`: brand palette (tomato orange), Plus Jakarta Sans, and component classes (`btn-*`, `card`, `input`, `label`, `badge`, `alert-*`)
+- [x] Thymeleaf Layout Dialect: `layouts/app.html` (navbar, footer, role-aware links) and `layouts/auth.html` (split-screen brand panel)
+- [x] Shared fragments: icon set, flash alerts, order-status badges and action labels
+- [x] Landing page at `/` (hero, role cards)
+- [x] Restyled pages: login, register (role picker cards), error, restaurant setup / dashboard / menu-edit, customer and driver placeholders
+- [x] Restaurant dashboard: stats row, order cards with status badges, menu cards, sticky add-item form, mobile-first layout
+- [x] Dev workflow: `npm run watch:css` and `spring.thymeleaf.cache=false` in `dev`
+- [x] Checked visually at 1280px and 390px widths
+
+**DoD:** every page uses a shared layout; works without horizontal scrolling at 390px; `./mvnw verify`
+and `docker build` produce a jar with the compiled CSS; all tests green (41).
+
+**Status (2026-10-21):** ✅ done and manually tested in the browser.
+
+**UI conventions for later milestones:** build new pages on `layouts/app`, use the component
+classes before writing raw utility soup, and write full Tailwind class names in templates (no
+string-built class names), because the build only finds classes it can see. See
+[docs/03-implementation.md](docs/03-implementation.md#5-front-end-conventions).
 
 ### M3 — Customer ordering
 - [ ] Restaurant listing (active only) with search by name
@@ -172,6 +203,7 @@ errors; S1 is closed and has a regression test.
 - [ ] `OrderService.placeOrder()`, transactional
 - [ ] "My orders" page with status
 - [ ] Order confirmation email (async)
+- [ ] **Acceptance test (manual):** customer places an order → owner accepts, prepares and marks it ready on the dashboard (also covers the M2 order-flow test that was deferred)
 
 **DoD:** a customer can go from browsing to placing an order, and the stored total matches the server-side calculation.
 
@@ -196,7 +228,7 @@ errors; S1 is closed and has a regression test.
 - [ ] Rate limiting on `/auth/**` (e.g. Bucket4j)
 - [ ] Spring Boot Actuator (`health`, `info` only, exposed internally)
 - [ ] Non-root container user, healthchecks, `depends_on: condition: service_healthy`
-- [ ] Security headers (CSP, HSTS in prod), secure session cookie flags
+- [ ] Security headers (CSP, HSTS in prod), secure session cookie flags. The CSP must allow Google Fonts, or the font must be self-hosted. The inline `onsubmit` delete confirmations must move to a script file.
 - [ ] Structured logging; no PII in logs
 - [ ] JaCoCo coverage gate (≥ 70 % service layer)
 

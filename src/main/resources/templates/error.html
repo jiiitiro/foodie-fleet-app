@@ -1,11 +1,22 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/app}">
 <head>
-    <title>FoodieFleet - Error</title>
+    <title>Something went wrong</title>
 </head>
 <body>
-<h2 th:text="${status != null} ? ${status + ' - ' + error} : 'Something went wrong'">Error</h2>
-<p th:text="${#strings.isEmpty(message)} ? 'An unexpected error occurred.' : ${message}"></p>
-<p><a th:href="@{/auth/default-redirect}">Back to your dashboard</a></p>
+<main layout:fragment="content" class="grid place-items-center px-4 py-24">
+    <div class="text-center">
+        <p class="text-7xl font-extrabold text-brand-600" th:text="${status != null} ? ${status} : 'Oops'">404</p>
+        <h1 class="mt-4 text-2xl font-bold text-stone-900" th:text="${error != null} ? ${error} : 'Something went wrong'">Not Found</h1>
+        <p class="mx-auto mt-3 max-w-md text-stone-600"
+           th:text="${#strings.isEmpty(message)} ? 'An unexpected error occurred.' : ${message}">Message</p>
+        <div class="mt-8 flex justify-center gap-3">
+            <a th:href="@{/auth/default-redirect}" class="btn btn-primary">Back to your dashboard</a>
+            <a th:href="@{/}" class="btn btn-secondary">Home</a>
+        </div>
+    </div>
+</main>
 </body>
 </html>

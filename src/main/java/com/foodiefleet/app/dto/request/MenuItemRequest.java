@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.foodiefleet.app.model.MenuItem;
 import java.math.BigDecimal;
 
 @Data
@@ -31,5 +32,17 @@ public class MenuItemRequest {
     @Size(max = 255)
     private String imageUrl;
 
-    private boolean available;
+    // New items are available by default; the add form's checkbox is pre-ticked
+    @Builder.Default
+    private boolean available = true;
+
+    public static MenuItemRequest from(MenuItem item) {
+        return MenuItemRequest.builder()
+                .name(item.getName())
+                .description(item.getDescription())
+                .price(item.getPrice())
+                .imageUrl(item.getImageUrl())
+                .available(item.isAvailable())
+                .build();
+    }
 }

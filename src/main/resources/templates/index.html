@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layouts/app}">
+<head>
+    <title>Food delivery, simplified</title>
+</head>
+<body>
+<main layout:fragment="content">
+
+    <!-- Hero -->
+    <section class="relative overflow-hidden">
+        <div class="pointer-events-none absolute inset-x-0 -top-40 -z-10 mx-auto h-[36rem] max-w-5xl rounded-full bg-gradient-to-br from-brand-200/60 via-amber-100/60 to-transparent blur-3xl"></div>
+        <div class="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2">
+            <div>
+                <span class="badge bg-brand-100 text-brand-700">
+                    <svg th:replace="~{fragments/icons :: zap('size-3.5')}"></svg> Hot &amp; fresh, door to door
+                </span>
+                <h1 class="mt-5 text-4xl font-extrabold leading-tight tracking-tight text-stone-900 sm:text-5xl lg:text-6xl">
+                    Your city's kitchens, <span class="text-brand-600">delivered fast.</span>
+                </h1>
+                <p class="mt-5 max-w-xl text-lg text-stone-600">
+                    FoodieFleet connects hungry customers, local restaurants and delivery drivers on one simple platform.
+                </p>
+                <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                    <th:block sec:authorize="!isAuthenticated()">
+                        <a th:href="@{/auth/register}" class="btn btn-primary px-6 py-3 text-base">
+                            Create free account <svg th:replace="~{fragments/icons :: arrow-right('size-4')}"></svg>
+                        </a>
+                        <a th:href="@{/auth/login}" class="btn btn-secondary px-6 py-3 text-base">I already have an account</a>
+                    </th:block>
+                    <a sec:authorize="isAuthenticated()" th:href="@{/auth/default-redirect}" class="btn btn-primary px-6 py-3 text-base">
+                        Go to your dashboard <svg th:replace="~{fragments/icons :: arrow-right('size-4')}"></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Illustrative order card -->
+            <div class="relative mx-auto w-full max-w-md">
+                <div class="absolute -left-6 -top-6 size-24 rounded-3xl bg-amber-200/70"></div>
+                <div class="absolute -bottom-6 -right-6 size-32 rounded-full bg-brand-200/70"></div>
+                <div class="card relative p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-stone-500">Order #1042</p>
+                            <p class="text-lg font-bold text-stone-900">Pasta Place</p>
+                        </div>
+                        <span class="badge bg-indigo-100 text-indigo-800"><span class="size-1.5 rounded-full bg-indigo-500"></span>Out for delivery</span>
+                    </div>
+                    <ul class="mt-5 space-y-3 text-sm">
+                        <li class="flex justify-between"><span>2 × Carbonara</span><span class="font-semibold">25.00</span></li>
+                        <li class="flex justify-between"><span>1 × Tiramisu</span><span class="font-semibold">6.00</span></li>
+                        <li class="flex justify-between border-t border-dashed border-stone-200 pt-3 font-bold text-stone-900"><span>Total</span><span>31.00</span></li>
+                    </ul>
+                    <div class="mt-6">
+                        <div class="flex justify-between text-xs font-medium text-stone-500">
+                            <span>Placed</span><span>Preparing</span><span>On the way</span><span>Delivered</span>
+                        </div>
+                        <div class="mt-2 h-2 rounded-full bg-stone-100">
+                            <div class="h-2 w-3/4 rounded-full bg-gradient-to-r from-brand-400 to-brand-600"></div>
+                        </div>
+                    </div>
+                    <div class="mt-5 flex items-center gap-3 rounded-xl bg-stone-50 p-3">
+                        <span class="grid size-10 place-items-center rounded-full bg-brand-600 text-white">
+                            <svg th:replace="~{fragments/icons :: truck('size-5')}"></svg>
+                        </span>
+                        <div class="text-sm">
+                            <p class="font-semibold text-stone-900">Arriving in about 12 min</p>
+                            <p class="text-stone-500">Your driver is on the way</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Roles -->
+    <section class="border-t border-stone-200 bg-white">
+        <div class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+            <div class="max-w-2xl">
+                <h2 class="text-3xl font-extrabold tracking-tight text-stone-900">One platform, three ways to join</h2>
+                <p class="mt-3 text-stone-600">Pick your role when you sign up. Each one gets a dashboard built for the job.</p>
+            </div>
+            <div class="mt-10 grid gap-6 md:grid-cols-3">
+                <div class="card card-body transition hover:-translate-y-0.5 hover:shadow-md">
+                    <span class="grid size-12 place-items-center rounded-xl bg-amber-100 text-amber-700"><svg th:replace="~{fragments/icons :: bag('size-6')}"></svg></span>
+                    <h3 class="mt-4 text-lg font-bold text-stone-900">Customers</h3>
+                    <p class="mt-2 text-sm text-stone-600">Browse local restaurants, build your order and track it right to your door.</p>
+                </div>
+                <div class="card card-body transition hover:-translate-y-0.5 hover:shadow-md">
+                    <span class="grid size-12 place-items-center rounded-xl bg-brand-100 text-brand-700"><svg th:replace="~{fragments/icons :: store('size-6')}"></svg></span>
+                    <h3 class="mt-4 text-lg font-bold text-stone-900">Restaurant owners</h3>
+                    <p class="mt-2 text-sm text-stone-600">Publish your menu, open or close in one tap, and move orders from kitchen to pickup.</p>
+                </div>
+                <div class="card card-body transition hover:-translate-y-0.5 hover:shadow-md">
+                    <span class="grid size-12 place-items-center rounded-xl bg-indigo-100 text-indigo-700"><svg th:replace="~{fragments/icons :: truck('size-6')}"></svg></span>
+                    <h3 class="mt-4 text-lg font-bold text-stone-900">Drivers</h3>
+                    <p class="mt-2 text-sm text-stone-600">Claim ready orders nearby and deliver on your own schedule.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
+</html>

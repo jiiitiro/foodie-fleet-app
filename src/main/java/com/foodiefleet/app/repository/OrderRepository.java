@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -16,5 +17,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByStatus(OrderStatus status);
     List<Order> findByDriverOrderByCreatedAtDesc(User driver);
 
-    List<Order> findByRestaurantId(Long restaurantId);
+    // Ownership-scoped lookup: empty if the order doesn't belong to this owner's restaurant
+    Optional<Order> findByIdAndRestaurant_Owner_Id(Long id, Long ownerId);
 }
