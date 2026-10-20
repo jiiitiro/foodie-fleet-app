@@ -5,9 +5,12 @@
 </head>
 <body>
 <h2>Login to FoodieFleet</h2>
-<div th:if="${param.error}" style="color:red;">Invalid email or password.</div>
+<div th:if="${param.error != null and param.error[0] == 'true'}" style="color:red;">Invalid email or password.</div>
+<div th:if="${param.error != null and param.error[0] == 'disabled'}" style="color:red;">Your account is not verified yet. Please click the link in the verification email we sent you.</div>
+<div th:if="${param.error != null and param.error[0] == 'invalid_token'}" style="color:red;">This verification link is invalid or has expired.</div>
 <div th:if="${param.logout}" style="color:green;">You have been logged out.</div>
-<div th:if="${param.registered}" style="color:green;">Registration successful! Please login.</div>
+<div th:if="${param.registered}" style="color:green;">Registration successful! Check your email to verify your account, then log in.</div>
+<div th:if="${param.verified}" style="color:green;">Your email has been verified. You can now log in.</div>
 
 <form th:action="@{/auth/login}" method="post">
     <label>Email: <input type="email" name="username" required /></label><br/><br/>

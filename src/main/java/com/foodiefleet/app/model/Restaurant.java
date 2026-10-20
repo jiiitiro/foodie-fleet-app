@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name="restaurant")
+@Table(name="restaurants")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,8 +28,13 @@ public class Restaurant {
 
     private String phone;
 
+    // Open/closed flag controlled by the owner
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean active = true;
+
     @OneToOne
-    @JoinColumn(name="owner_id", nullable = false)
+    @JoinColumn(name="owner_id", nullable = false, unique = true)
     private User owner;
 
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -14,7 +14,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${APP_BASE_URL}")
+    @Value("${app.base-url}")
     private String baseUrl;
 
     @Value("${spring.mail.username}")
