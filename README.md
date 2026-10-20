@@ -49,16 +49,19 @@ docker compose up --build
 | App | http://localhost:8081 |
 | Postgres | `localhost:5433` |
 
-### 2b. Run the app locally (IDE or Maven) against Dockerised Postgres
+### 2b. Run the app locally (IDE or Maven)
 
 ```bash
-docker compose up -d postgres
-set -a; source .env; set +a          # export the variables into your shell
-./mvnw spring-boot:run
+./mvnw spring-boot:run      # or run AppApplication from IntelliJ
 ```
 
-The app runs on http://localhost:8080 and connects to Postgres on `localhost:5433`.
-In IntelliJ, use the EnvFile plugin or add the variables to the run configuration.
+Spring Boot's [Docker Compose support](https://docs.spring.io/spring-boot/reference/features/dev-services.html)
+starts Postgres from `compose.dev.yaml` automatically and connects using the credentials in your
+`.env`, so you don't need to start the database or export env vars yourself. Docker must be running.
+The database keeps running after the app stops; stop it with `docker compose stop postgres`.
+
+The app runs on http://localhost:8080. For working email links and sending mail, the app process
+still needs `APP_BASE_URL` and `MAIL_*` (IntelliJ EnvFile plugin, or `set -a; source .env; set +a`).
 
 ### 3. Try it
 1. Open `/auth/register` and create an account.

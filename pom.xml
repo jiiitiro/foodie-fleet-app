@@ -73,6 +73,15 @@
             <artifactId>flyway-core</artifactId>
         </dependency>
 
+        <!-- Dev: starts compose.dev.yaml (Postgres) automatically on spring-boot:run / IDE run.
+             Not packaged into the jar and skipped in tests. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-docker-compose</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Utilities -->
         <dependency>
             <groupId>org.projectlombok</groupId>
