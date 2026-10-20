@@ -8,17 +8,22 @@
 <div th:if="${errorMessage}" style="color:red;" th:text="${errorMessage}"></div>
 
 <form th:action="@{/auth/register}" th:object="${registerRequest}" method="post">
-    <label>Full Name: <input type="text" th:field="*{fullName}" required /></label><br/><br/>
-    <label>Email: <input type="email" th:field="*{email}" required /></label><br/><br/>
-    <label>Password: <input type="password" th:field="*{password}" required /></label><br/><br/>
-    <label>Phone Number: <input type="text" th:field="*{phoneNumber}" /></label><br/><br/>
+    <label>Full Name: <input type="text" th:field="*{fullName}" required maxlength="255" /></label>
+    <span th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}" style="color:red;"></span><br/><br/>
+    <label>Email: <input type="email" th:field="*{email}" required maxlength="255" /></label>
+    <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" style="color:red;"></span><br/><br/>
+    <label>Password: <input type="password" th:field="*{password}" required minlength="8" maxlength="72" /></label>
+    <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}" style="color:red;"></span><br/><br/>
+    <label>Phone Number: <input type="text" th:field="*{phoneNumber}" maxlength="30" /></label>
+    <span th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}" style="color:red;"></span><br/><br/>
     <label>Role:
         <select th:field="*{role}">
             <option value="CUSTOMER">Customer</option>
             <option value="RESTAURANT_OWNER">Restaurant Owner</option>
             <option value="DRIVER">Delivery Driver</option>
         </select>
-    </label><br/><br/>
+    </label>
+    <span th:if="${#fields.hasErrors('role')}" th:errors="*{role}" style="color:red;"></span><br/><br/>
     <button type="submit">Register</button>
 </form>
 <p>Already have an account? <a th:href="@{/auth/login}">Log in here</a></p>

@@ -1,0 +1,17 @@
+# Dev-only compose file used by Spring Boot's Docker Compose support (see application-dev.properties).
+# It only starts Postgres, reusing the definition in docker-compose.yml, so the same container
+# and data volume are shared with `docker compose up`.
+name: floodie-fleet
+
+services:
+  postgres:
+    extends:
+      file: docker-compose.yml
+      service: postgres
+
+volumes:
+  foodiefleet_pgdata:
+
+networks:
+  foodiefleet-net:
+    driver: bridge

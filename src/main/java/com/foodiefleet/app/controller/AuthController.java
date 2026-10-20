@@ -2,11 +2,13 @@ package com.foodiefleet.app.controller;
 
 import com.foodiefleet.app.dto.request.RegisterRequest;
 import com.foodiefleet.app.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
@@ -28,7 +30,11 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute("registerRequest") RegisterRequest request, Model model) {
+    public String registerUser(@Valid @ModelAttribute("registerRequest") RegisterRequest request,
+                               BindingResult bindingResult, Model model) {
+        if (bindingResult.hasErrors()) {
+            return "auth/register";
+        }
         try {
             authService.registerUser(request);
             return "redirect:/auth/login?registered=true";
@@ -52,4 +58,15 @@ public class AuthController {
         }
         return "redirect:/";
     }
+
+    @GetMapping("/verify")
+    public String verifyAccount(@RequestParam("token") String token) {
+        boolean isVerified = authService.verifyToken(token);
+        if (isVerified) {
+            return "redirect:/auth/login?verified=true";
+        } else {
+            return "redirect:/auth/login?error=invalid_token";
+        }
+    }
+
 }
