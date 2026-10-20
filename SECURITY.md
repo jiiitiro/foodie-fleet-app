@@ -34,7 +34,7 @@ to stay anonymous.
 | Password storage | BCrypt (`BCryptPasswordEncoder`, default strength 10) | ✅ |
 | Account activation | Email verification token (UUID v4, 24 h expiry, single use) | ✅ |
 | Authorization (role) | URL-based RBAC in `SecurityConfig` (`/customer`, `/restaurant`, `/driver`, `/admin`) | ✅ |
-| Authorization (ownership) | Service-layer checks that the resource belongs to the caller | ❌ missing (S2) |
+| Authorization (ownership) | Owner-scoped repository queries in services (`findByIdAndRestaurant_Owner_Id`) | ✅ restaurant module (M2) |
 | CSRF | Spring Security default, token injected by Thymeleaf `th:action` | ✅ |
 | XSS | Thymeleaf `th:text` auto-escaping; never use `th:utext` with user data | ✅ (keep it so) |
 | SQL injection | Spring Data JPA derived queries / parameter binding only | ✅ (no native string concat) |
@@ -68,7 +68,7 @@ The form only offers three roles, but a hand-crafted POST with `role=ADMIN` is a
 `EnumSet.of(CUSTOMER, RESTAURANT_OWNER, DRIVER)`. Create admins only through a startup
 seeder or by an existing admin. Add a regression test.
 
-### S2 — Insecure Direct Object References 🔴 Critical
+### S2 — Insecure Direct Object References 🔴 Critical — ✅ fixed in M2
 `RestaurantController` endpoints `/menu/add?restaurantId=`, `/menu/edit/{id}`,
 `/menu/toggle/{id}`, `/menu/delete/{id}` and `/orders/{id}/status` act on any ID without
 checking ownership. `getCurrentUserId()` is also hard-coded to `1L`.

@@ -2,84 +2,162 @@ package com.foodiefleet.app.controller;
 
 import com.foodiefleet.app.dto.request.MenuItemRequest;
 import com.foodiefleet.app.dto.request.RestaurantRequest;
+import com.foodiefleet.app.exception.ConflictException;
+import com.foodiefleet.app.model.MenuItem;
 import com.foodiefleet.app.model.OrderStatus;
 import com.foodiefleet.app.model.Restaurant;
+import com.foodiefleet.app.model.Role;
+import com.foodiefleet.app.model.User;
+import com.foodiefleet.app.security.CurrentUserService;
 import com.foodiefleet.app.service.RestaurantService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/restaurant")
 @RequiredArgsConstructor
 public class RestaurantController {
 
-    private final RestaurantService restaurantService;
+    private static final String REDIRECT_DASHBOARD = "redirect:/restaurant/dashboard";
 
-    // Helper method to resolve current logged in user ID from authentication principal
-    private Long getCurrentUserId(UserDetails userDetails) {
-        // Replace with your actual CustomUserDetails or User retrieval logic
-        return 1L; // Placeholder: ensure you map userDetails.getUsername() to your User entity ID
-    }
+    private final RestaurantService restaurantService;
+    private final CurrentUserService currentUserService;
 
     @GetMapping("/dashboard")
-    public String dashboard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        Long ownerId = getCurrentUserId(userDetails);
-        Restaurant restaurant = restaurantService.getRestaurantByOwner(ownerId);
+    public String dashboard(Model model) {
+        Optional<Restaurant> restaurant = restaurantService.findRestaurant(currentUserService.get());
 
-        if (restaurant == null) {
+        // First login: the owner has to create the restaurant profile before anything else
+        if (restaurant.isEmpty()) {
             model.addAttribute("restaurantRequest", new RestaurantRequest());
             return "restaurant/setup";
         }
 
-        model.addAttribute("restaurant", restaurant);
-        model.addAttribute("menuItems", restaurantService.getMenuItems(restaurant.getId()));
-        model.addAttribute("orders", restaurantService.getIncomingOrders(restaurant.getId()));
+        populateDashboard(model, restaurant.get());
         return "restaurant/dashboard";
     }
 
+    // --- PROFILE ---
+
     @PostMapping("/profile")
-    public String saveProfile(@AuthenticationPrincipal UserDetails userDetails,
-                              @Valid @ModelAttribute RestaurantRequest request) {
-        Long ownerId = getCurrentUserId(userDetails);
-        restaurantService.saveOrUpdateProfile(ownerId, request);
-        return "redirect:/restaurant/dashboard";
+    public String saveProfile(@Valid @ModelAttribute("restaurantRequest") RestaurantRequest request,
+                              BindingResult bindingResult, Model model, RedirectAttributes redirect) {
+        User owner = currentUserService.get();
+        if (bindingResult.hasErrors()) {
+            Optional<Restaurant> restaurant = restaurantService.findRestaurant(owner);
+            if (restaurant.isEmpty()) {
+                return "restaurant/setup";
+            }
+            populateDashboard(model, restaurant.get());
+            return "restaurant/dashboard";
+        }
+
+        restaurantService.saveOrUpdateProfile(owner, request);
+        redirect.addFlashAttribute("success", "Restaurant profile saved.");
+        return REDIRECT_DASHBOARD;
     }
 
+    @PostMapping("/toggle-open")
+    public String toggleOpen(RedirectAttributes redirect) {
+        Restaurant restaurant = restaurantService.toggleOpen(currentUserService.get());
+        redirect.addFlashAttribute("success",
+                restaurant.getActive() ? "Your restaurant is now open." : "Your restaurant is now closed.");
+        return REDIRECT_DASHBOARD;
+    }
+
+    // --- MENU ---
+
     @PostMapping("/menu/add")
-    public String addMenuItem(@RequestParam Long restaurantId,
-                              @Valid @ModelAttribute MenuItemRequest request) {
-        restaurantService.addMenuItem(restaurantId, request);
-        return "redirect:/restaurant/dashboard";
+    public String addMenuItem(@Valid @ModelAttribute("menuItemRequest") MenuItemRequest request,
+                              BindingResult bindingResult, Model model, RedirectAttributes redirect) {
+        User owner = currentUserService.get();
+        if (bindingResult.hasErrors()) {
+            Optional<Restaurant> restaurant = restaurantService.findRestaurant(owner);
+            if (restaurant.isEmpty()) {
+                return REDIRECT_DASHBOARD;
+            }
+            populateDashboard(model, restaurant.get());
+            return "restaurant/dashboard";
+        }
+
+        MenuItem item = restaurantService.addMenuItem(owner, request);
+        redirect.addFlashAttribute("success", "Added \"" + item.getName() + "\" to the menu.");
+        return REDIRECT_DASHBOARD;
+    }
+
+    @GetMapping("/menu/edit/{id}")
+    public String editMenuItemForm(@PathVariable Long id, Model model) {
+        MenuItem item = restaurantService.getMenuItem(currentUserService.get(), id);
+        model.addAttribute("itemId", id);
+        model.addAttribute("menuItemRequest", MenuItemRequest.from(item));
+        return "restaurant/menu-edit";
     }
 
     @PostMapping("/menu/edit/{id}")
     public String editMenuItem(@PathVariable Long id,
-                               @Valid @ModelAttribute MenuItemRequest request) {
-        restaurantService.updateMenuItem(id, request);
-        return "redirect:/restaurant/dashboard";
+                               @Valid @ModelAttribute("menuItemRequest") MenuItemRequest request,
+                               BindingResult bindingResult, Model model, RedirectAttributes redirect) {
+        User owner = currentUserService.get();
+        if (bindingResult.hasErrors()) {
+            restaurantService.getMenuItem(owner, id); // 404 if the item isn't this owner's
+            model.addAttribute("itemId", id);
+            return "restaurant/menu-edit";
+        }
+
+        MenuItem item = restaurantService.updateMenuItem(owner, id, request);
+        redirect.addFlashAttribute("success", "Updated \"" + item.getName() + "\".");
+        return REDIRECT_DASHBOARD;
     }
 
     @PostMapping("/menu/toggle/{id}")
     public String toggleAvailability(@PathVariable Long id) {
-        restaurantService.toggleItemAvailability(id);
-        return "redirect:/restaurant/dashboard";
+        restaurantService.toggleItemAvailability(currentUserService.get(), id);
+        return REDIRECT_DASHBOARD;
     }
 
     @PostMapping("/menu/delete/{id}")
-    public String deleteMenuItem(@PathVariable Long id) {
-        restaurantService.deleteMenuItem(id);
-        return "redirect:/restaurant/dashboard";
+    public String deleteMenuItem(@PathVariable Long id, RedirectAttributes redirect) {
+        try {
+            restaurantService.deleteMenuItem(currentUserService.get(), id);
+            redirect.addFlashAttribute("success", "Menu item deleted.");
+        } catch (ConflictException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+        }
+        return REDIRECT_DASHBOARD;
     }
+
+    // --- ORDERS ---
 
     @PostMapping("/orders/{id}/status")
     public String updateOrderStatus(@PathVariable Long id,
-                                    @RequestParam OrderStatus status) {
-        restaurantService.updateOrderStatus(id, status);
-        return "redirect:/restaurant/dashboard";
+                                    @RequestParam OrderStatus status, RedirectAttributes redirect) {
+        try {
+            restaurantService.updateOrderStatus(currentUserService.get(), id, status);
+            redirect.addFlashAttribute("success", "Order #" + id + " is now " + status + ".");
+        } catch (ConflictException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+        }
+        return REDIRECT_DASHBOARD;
+    }
+
+    // Keeps form objects already in the model (e.g. ones with validation errors)
+    private void populateDashboard(Model model, Restaurant restaurant) {
+        model.addAttribute("restaurant", restaurant);
+        model.addAttribute("menuItems", restaurantService.getMenuItems(restaurant));
+        model.addAttribute("orders", restaurantService.getIncomingOrders(restaurant));
+        model.addAttribute("ownerRole", Role.RESTAURANT_OWNER);
+        if (!model.containsAttribute("restaurantRequest")) {
+            model.addAttribute("restaurantRequest", RestaurantRequest.from(restaurant));
+        }
+        if (!model.containsAttribute("menuItemRequest")) {
+            model.addAttribute("menuItemRequest", new MenuItemRequest());
+        }
     }
 }

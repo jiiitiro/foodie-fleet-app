@@ -1,10 +1,10 @@
 package com.foodiefleet.app.security;
 
+import com.foodiefleet.app.TestDatabase;
 import com.foodiefleet.app.TestcontainersConfiguration;
 import com.foodiefleet.app.model.Role;
 import com.foodiefleet.app.model.User;
 import com.foodiefleet.app.repository.UserRepository;
-import com.foodiefleet.app.repository.VerificationTokenRepository;
 import com.foodiefleet.app.service.EmailService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -46,7 +47,7 @@ class SecurityIntegrationTest {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private VerificationTokenRepository tokenRepository;
+    private JdbcTemplate jdbcTemplate;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -55,8 +56,7 @@ class SecurityIntegrationTest {
 
     @BeforeEach
     void cleanDatabase() {
-        tokenRepository.deleteAll();
-        userRepository.deleteAll();
+        TestDatabase.truncateAll(jdbcTemplate);
     }
 
     // --- Registration -------------------------------------------------------
@@ -184,8 +184,10 @@ class SecurityIntegrationTest {
     // --- Error handling ------------------------------------------------------
 
     @Test
-    @WithMockUser(roles = "RESTAURANT_OWNER")
+    @WithMockUser(username = "owner@example.com", roles = "RESTAURANT_OWNER")
     void missingResource_rendersNotFoundPage() throws Exception {
+        saveUser("owner@example.com", Role.RESTAURANT_OWNER, true);
+
         mockMvc.perform(post("/restaurant/menu/toggle/999999").with(csrf()))
                 .andExpect(status().isNotFound())
                 .andExpect(view().name("error"))

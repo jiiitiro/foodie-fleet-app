@@ -5,6 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ## [Unreleased]
 
+### Added (M2 restaurant owner)
+- Restaurant setup page on first login, and a dashboard with incoming orders, menu and profile.
+- Open/close restaurant button.
+- Menu item add / edit page / toggle availability / delete, with validation.
+- Order status buttons that follow the order lifecycle (`OrderStatus.nextStatusesFor(Role)`).
+- `CurrentUserService` to resolve the logged-in user; `ConflictException` (409).
+
+### Security (M2)
+- **S2:** all restaurant endpoints are scoped to the logged-in owner; another owner's menu items and orders return 404.
+
+### Changed (M2)
+- Menu items that appear in past orders can no longer be deleted (they can be marked unavailable).
+
 ### Added
 - Restaurant owner module (work in progress): profile management, menu item CRUD, order status updates.
 - `MenuItemRequest`, `RestaurantRequest` DTOs.
@@ -36,7 +49,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 - Empty stubs: `JwtTokenProvider`, `JwtResponse`, `LoginRequest`, `AsyncConfig`.
 
 ### Known issues
-- Restaurant module still uses a placeholder owner ID and has no ownership checks (SECURITY.md S2, fixed in M2).
+- ~~Restaurant module still uses a placeholder owner ID and has no ownership checks (SECURITY.md S2).~~ Fixed in M2.
 
 ## [0.0.1] — 2026-10-09 (untagged)
 

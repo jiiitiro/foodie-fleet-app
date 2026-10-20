@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>FoodieFleet - Set Up Your Restaurant</title>
+</head>
+<body>
+<h2>Set Up Your Restaurant</h2>
+<p>Tell customers about your restaurant. You can change these details later.</p>
+
+<form th:action="@{/restaurant/profile}" th:object="${restaurantRequest}" method="post">
+    <label>Name: <input type="text" th:field="*{name}" required maxlength="255" /></label>
+    <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red;"></span><br/><br/>
+    <label>Description: <input type="text" th:field="*{description}" maxlength="255" /></label>
+    <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}" style="color:red;"></span><br/><br/>
+    <label>Address: <input type="text" th:field="*{address}" required maxlength="255" /></label>
+    <span th:if="${#fields.hasErrors('address')}" th:errors="*{address}" style="color:red;"></span><br/><br/>
+    <label>Phone: <input type="text" th:field="*{phone}" maxlength="30" /></label>
+    <span th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" style="color:red;"></span><br/><br/>
+    <label><input type="checkbox" th:field="*{active}" /> Open for orders</label><br/><br/>
+    <button type="submit">Create Restaurant</button>
+</form>
+
+<form th:action="@{/auth/logout}" method="post"><button type="submit">Log out</button></form>
+</body>
+</html>

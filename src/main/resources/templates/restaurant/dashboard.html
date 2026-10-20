@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>FoodieFleet - Restaurant Dashboard</title>
+    <style>
+        table { border-collapse: collapse; margin-bottom: 1em; }
+        th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; vertical-align: top; }
+        form.inline { display: inline; }
+        ul.items { margin: 0; padding-left: 1.2em; }
+    </style>
+</head>
+<body>
+<h2 th:text="${restaurant.name}">Restaurant</h2>
+<div>
+    Status:
+    <strong th:if="${restaurant.active}" style="color:green;">Open</strong>
+    <strong th:unless="${restaurant.active}" style="color:red;">Closed</strong>
+    <form class="inline" th:action="@{/restaurant/toggle-open}" method="post">
+        <button type="submit" th:text="${restaurant.active} ? 'Close restaurant' : 'Open restaurant'">Toggle</button>
+    </form>
+</div>
+<form th:action="@{/auth/logout}" method="post"><button type="submit">Log out</button></form>
+
+<div th:if="${success}" style="color:green;" th:text="${success}"></div>
+<div th:if="${error}" style="color:red;" th:text="${error}"></div>
+
+<!-- Orders -->
+<h3>Incoming Orders</h3>
+<p th:if="${#lists.isEmpty(orders)}">No orders yet.</p>
+<table th:unless="${#lists.isEmpty(orders)}">
+    <tr><th>#</th><th>Placed</th><th>Customer</th><th>Items</th><th>Total</th><th>Deliver to</th><th>Status</th><th>Actions</th></tr>
+    <tr th:each="order : ${orders}">
+        <td th:text="${order.id}"></td>
+        <td th:text="${order.createdAt != null} ? ${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm')} : ''"></td>
+        <td th:text="${order.customer.fullName}"></td>
+        <td>
+            <ul class="items">
+                <li th:each="orderItem : ${order.items}"
+                    th:text="${orderItem.quantity + ' × ' + orderItem.menuItem.name}"></li>
+            </ul>
+        </td>
+        <td th:text="${#numbers.formatDecimal(order.totalPrice, 1, 2)}"></td>
+        <td th:text="${order.deliveryAddress}"></td>
+        <td th:text="${order.status}"></td>
+        <td>
+            <form class="inline" th:each="next : ${order.status.nextStatusesFor(ownerRole)}"
+                  th:action="@{/restaurant/orders/{id}/status(id=${order.id})}" method="post">
+                <input type="hidden" name="status" th:value="${next}" />
+                <button type="submit" th:text="${#strings.replace(next.name(), '_', ' ')}">Next</button>
+            </form>
+        </td>
+    </tr>
+</table>
+
+<!-- Menu -->
+<h3>Menu</h3>
+<p th:if="${#lists.isEmpty(menuItems)}">Your menu is empty. Add your first item below.</p>
+<table th:unless="${#lists.isEmpty(menuItems)}">
+    <tr><th>Name</th><th>Description</th><th>Price</th><th>Available</th><th>Actions</th></tr>
+    <tr th:each="item : ${menuItems}">
+        <td th:text="${item.name}"></td>
+        <td th:text="${item.description}"></td>
+        <td th:text="${#numbers.formatDecimal(item.price, 1, 2)}"></td>
+        <td th:text="${item.available} ? 'Yes' : 'No'"></td>
+        <td>
+            <a th:href="@{/restaurant/menu/edit/{id}(id=${item.id})}">Edit</a>
+            <form class="inline" th:action="@{/restaurant/menu/toggle/{id}(id=${item.id})}" method="post">
+                <button type="submit" th:text="${item.available} ? 'Mark unavailable' : 'Mark available'">Toggle</button>
+            </form>
+            <form class="inline" th:action="@{/restaurant/menu/delete/{id}(id=${item.id})}" method="post"
+                  onsubmit="return confirm('Delete this menu item?');">
+                <button type="submit">Delete</button>
+            </form>
+        </td>
+    </tr>
+</table>
+
+<h4>Add Menu Item</h4>
+<form th:action="@{/restaurant/menu/add}" th:object="${menuItemRequest}" method="post">
+    <label>Name: <input type="text" th:field="*{name}" required maxlength="255" /></label>
+    <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red;"></span><br/><br/>
+    <label>Description: <input type="text" th:field="*{description}" maxlength="255" /></label>
+    <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}" style="color:red;"></span><br/><br/>
+    <label>Price: <input type="number" th:field="*{price}" required min="0.01" step="0.01" /></label>
+    <span th:if="${#fields.hasErrors('price')}" th:errors="*{price}" style="color:red;"></span><br/><br/>
+    <label>Image URL: <input type="url" th:field="*{imageUrl}" maxlength="255" /></label>
+    <span th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}" style="color:red;"></span><br/><br/>
+    <label><input type="checkbox" th:field="*{available}" /> Available</label><br/><br/>
+    <button type="submit">Add Item</button>
+</form>
+
+<!-- Profile -->
+<h3>Restaurant Profile</h3>
+<form th:action="@{/restaurant/profile}" th:object="${restaurantRequest}" method="post">
+    <label>Name: <input type="text" th:field="*{name}" required maxlength="255" /></label>
+    <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red;"></span><br/><br/>
+    <label>Description: <input type="text" th:field="*{description}" maxlength="255" /></label>
+    <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}" style="color:red;"></span><br/><br/>
+    <label>Address: <input type="text" th:field="*{address}" required maxlength="255" /></label>
+    <span th:if="${#fields.hasErrors('address')}" th:errors="*{address}" style="color:red;"></span><br/><br/>
+    <label>Phone: <input type="text" th:field="*{phone}" maxlength="30" /></label>
+    <span th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" style="color:red;"></span><br/><br/>
+    <label><input type="checkbox" th:field="*{active}" /> Open for orders</label><br/><br/>
+    <button type="submit">Save Profile</button>
+</form>
+</body>
+</html>

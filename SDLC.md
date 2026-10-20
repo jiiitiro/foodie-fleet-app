@@ -52,14 +52,14 @@ Spring Security). A REST/JWT API is planned for a later phase (see M8).
 | Registration + login | ✅ Done | BCrypt, form login, role-based redirect after login |
 | Email verification | ✅ Done | Async email over Gmail SMTP, token valid for 24 h |
 | RBAC route guards | ✅ Done | `/customer/**`, `/restaurant/**`, `/driver/**`, `/admin/**` |
-| Restaurant owner module | 🟡 In progress (uncommitted) | Controller + service written; templates missing |
+| Restaurant owner module | ✅ Done (M2) | Setup, dashboard, menu CRUD, order handling; ownership-scoped |
 | Customer module | ⬜ Placeholder | Returns a hard-coded HTML string |
 | Driver module | ⬜ Placeholder | Returns a hard-coded HTML string |
 | Admin module | ⬜ Not started | Route exists in security config only |
 | Orders | ⬜ Not started | `OrderService`, `CreateOrderRequest`, `OrderResponse` are empty files |
 | Error handling | ✅ Done (M1.5) | `GlobalExceptionHandler` + `error.html` |
 | JWT | ⬜ Deferred to M8 | Empty stubs removed in M1.5 |
-| Tests | 🟡 Started (M1.5) | 18 tests: auth unit tests + security/registration integration tests on Testcontainers |
+| Tests | 🟡 Growing | 39 tests: auth + order-status unit tests; security and restaurant-owner integration tests on Testcontainers |
 | CI/CD | ⬜ None | |
 | DB migrations | ✅ Done (M1.5) | Flyway `V1__init.sql`; Hibernate `ddl-auto=validate` |
 | Containerisation | ✅ Done | Multi-stage Dockerfile + Compose (app on 8081, DB on 5433) |
@@ -154,13 +154,17 @@ against a fresh database. Existing dev databases created by `ddl-auto=update` mu
 errors; S1 is closed and has a regression test.
 
 ### M2 — Restaurant owner module
-- [ ] Resolve the current user properly: load `User` by `userDetails.getUsername()` (fixes D4)
-- [ ] **S2**: ownership checks in `RestaurantService` for every menu/order mutation
-- [ ] Templates: `restaurant/setup.html`, `restaurant/dashboard.html` (fixes D8)
-- [ ] Restaurant `active` flag (open/closed) persisted
-- [ ] Menu CRUD with validation (price > 0, name required)
-- [ ] Incoming orders list; owner can move `PLACED → ACCEPTED → PREPARING → READY_FOR_PICKUP` or `CANCELLED`
-- [ ] Order-status transitions enforced by a state machine (see [architecture](docs/02-architecture.md#order-lifecycle))
+- [x] Resolve the current user properly: `CurrentUserService` loads `User` by the principal's email (fixes D4)
+- [x] **S2**: every menu/order operation is scoped to the logged-in owner; other owners' resources return 404
+- [x] Templates: `restaurant/setup.html`, `restaurant/dashboard.html`, `restaurant/menu-edit.html` (fixes D8)
+- [x] Restaurant `active` flag (open/closed) persisted, with an Open/Close button
+- [x] Menu CRUD with validation (price > 0, name required); items in past orders can't be deleted (mark unavailable instead)
+- [x] Incoming orders list; owner can move `PLACED → ACCEPTED → PREPARING → READY_FOR_PICKUP` or `CANCELLED`
+- [x] Order-status transitions enforced by a state machine (`OrderStatus.nextStatusesFor(Role)`)
+
+**Status (2026-10-20):** done on branch `feature/m2-restaurant-owner`; 16 new tests, including
+wrong-owner cases for every endpoint. The dashboard can show orders, but customers can't place
+them until M3, so test orders currently have to be inserted directly into the database.
 
 **DoD:** owner A cannot read or modify owner B's data (test-proven); all actions available in the UI.
 

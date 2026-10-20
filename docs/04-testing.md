@@ -2,17 +2,20 @@
 
 Back to [SDLC.md](../SDLC.md)
 
-## 1. Current state (after M1.5)
-18 tests, all passing with `./mvnw verify` (Docker required):
+## 1. Current state (after M2)
+39 tests, all passing with `./mvnw verify` (Docker required):
 
 | Test class | Type | Covers |
 |---|---|---|
 | `AppApplicationTests` | Integration | Context starts; Flyway schema matches entities (`ddl-auto=validate`) |
 | `service/AuthServiceTest` | Unit (Mockito) | Admin/missing role rejected, duplicate email, email normalisation, disabled user + verification email |
+| `model/OrderStatusTest` | Unit | Allowed/forbidden status transitions per role |
+| `controller/RestaurantControllerIntegrationTest` | Integration | Setup and profile, open/close, menu CRUD and validation, delete refused for items in past orders, order status flow, **wrong-owner → 404 on every endpoint** |
 | `security/SecurityIntegrationTest` | Integration (MockMvc + Testcontainers) | Registration (S1 regression, validation, CSRF), login outcomes (unverified / wrong password / success), role-based route access, login messages, 404 error page |
 
 Shared setup: `TestcontainersConfiguration` (Postgres 15) + `@ActiveProfiles("test")`, with
-`EmailService` mocked. `pom.xml` overrides `testcontainers.version` to 1.21.4 because the
+`EmailService` mocked. Integration classes share one context and database, so each test starts with
+`TestDatabase.truncateAll(...)`. `pom.xml` overrides `testcontainers.version` to 1.21.4 because the
 1.19.7 that Boot 3.2.5 pins can't talk to Docker Engine 29+.
 
 ## 2. Test pyramid
@@ -56,7 +59,7 @@ Mock `JavaMailSender` with `@MockBean` in integration tests so no real email is 
 ### Security / authorization (every module)
 - [ ] Anonymous → protected URL redirects to `/auth/login`
 - [ ] Wrong role → 403 (e.g. CUSTOMER on `/restaurant/dashboard`)
-- [ ] **Wrong owner → 404** on menu edit/toggle/delete and order status (S2)
+- [x] **Wrong owner → 404** on menu edit/toggle/delete and order status (S2)
 - [ ] Registration with `role=ADMIN` is rejected (S1)
 - [ ] POST without CSRF token → 403
 - [ ] Unverified user cannot log in
