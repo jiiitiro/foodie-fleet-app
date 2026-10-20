@@ -19,6 +19,8 @@
         <java.version>17</java.version>
         <!-- Boot 3.2.5 pins Testcontainers 1.19.7, which Docker Engine 29+ rejects (API too old) -->
         <testcontainers.version>1.21.4</testcontainers.version>
+        <frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
+        <node.version>v22.14.0</node.version>
     </properties>
 
     <dependencies>
@@ -41,6 +43,11 @@
         <dependency>
             <groupId>org.thymeleaf.extras</groupId>
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>nz.net.ultraq.thymeleaf</groupId>
+            <artifactId>thymeleaf-layout-dialect</artifactId>
         </dependency>
 
         <!-- Database & Persistence -->
@@ -123,6 +130,42 @@
 
     <build>
         <plugins>
+            <!-- Builds src/main/frontend/app.css (Tailwind) into static/css/app.css before resources are copied.
+                 Skip with -Dskip.installnodenpm -Dskip.npm when the CSS is already built. -->
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${frontend-maven-plugin.version}</version>
+                <configuration>
+                    <nodeVersion>${node.version}</nodeVersion>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install-node-and-npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>npm-ci</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>ci --no-audit --no-fund</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>build-css</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run build:css</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

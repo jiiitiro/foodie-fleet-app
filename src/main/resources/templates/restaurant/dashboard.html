@@ -1,107 +1,249 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/app}">
 <head>
-    <title>FoodieFleet - Restaurant Dashboard</title>
-    <style>
-        table { border-collapse: collapse; margin-bottom: 1em; }
-        th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; vertical-align: top; }
-        form.inline { display: inline; }
-        ul.items { margin: 0; padding-left: 1.2em; }
-    </style>
+    <title>Restaurant dashboard</title>
 </head>
 <body>
-<h2 th:text="${restaurant.name}">Restaurant</h2>
-<div>
-    Status:
-    <strong th:if="${restaurant.active}" style="color:green;">Open</strong>
-    <strong th:unless="${restaurant.active}" style="color:red;">Closed</strong>
-    <form class="inline" th:action="@{/restaurant/toggle-open}" method="post">
-        <button type="submit" th:text="${restaurant.active} ? 'Close restaurant' : 'Open restaurant'">Toggle</button>
-    </form>
-</div>
-<form th:action="@{/auth/logout}" method="post"><button type="submit">Log out</button></form>
+<main layout:fragment="content" class="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6">
 
-<div th:if="${success}" style="color:green;" th:text="${success}"></div>
-<div th:if="${error}" style="color:red;" th:text="${error}"></div>
+    <!-- Header -->
+    <section class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        <div class="flex items-start gap-4">
+            <span class="grid size-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-lg shadow-brand-600/20">
+                <svg th:replace="~{fragments/icons :: store('size-7')}"></svg>
+            </span>
+            <div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <h1 class="text-2xl font-extrabold tracking-tight text-stone-900 sm:text-3xl" th:text="${restaurant.name}">Restaurant</h1>
+                    <span th:if="${restaurant.active}" class="badge bg-emerald-100 text-emerald-800"><span class="size-1.5 animate-pulse rounded-full bg-emerald-500"></span>Open</span>
+                    <span th:unless="${restaurant.active}" class="badge bg-stone-200 text-stone-700"><span class="size-1.5 rounded-full bg-stone-500"></span>Closed</span>
+                </div>
+                <p class="mt-1 text-stone-600" th:if="${restaurant.description}" th:text="${restaurant.description}">Description</p>
+                <p class="mt-1 flex items-center gap-1.5 text-sm text-stone-500">
+                    <svg th:replace="~{fragments/icons :: map-pin('size-4')}"></svg>
+                    <span th:text="${restaurant.address}">Address</span>
+                </p>
+            </div>
+        </div>
+        <form th:action="@{/restaurant/toggle-open}" method="post">
+            <button type="submit" class="btn w-full md:w-auto" th:classappend="${restaurant.active} ? 'btn-secondary' : 'btn-success'">
+                <svg th:replace="~{fragments/icons :: power('size-4')}"></svg>
+                <span th:text="${restaurant.active} ? 'Close restaurant' : 'Open restaurant'">Toggle</span>
+            </button>
+        </form>
+    </section>
 
-<!-- Orders -->
-<h3>Incoming Orders</h3>
-<p th:if="${#lists.isEmpty(orders)}">No orders yet.</p>
-<table th:unless="${#lists.isEmpty(orders)}">
-    <tr><th>#</th><th>Placed</th><th>Customer</th><th>Items</th><th>Total</th><th>Deliver to</th><th>Status</th><th>Actions</th></tr>
-    <tr th:each="order : ${orders}">
-        <td th:text="${order.id}"></td>
-        <td th:text="${order.createdAt != null} ? ${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm')} : ''"></td>
-        <td th:text="${order.customer.fullName}"></td>
-        <td>
-            <ul class="items">
-                <li th:each="orderItem : ${order.items}"
-                    th:text="${orderItem.quantity + ' × ' + orderItem.menuItem.name}"></li>
-            </ul>
-        </td>
-        <td th:text="${#numbers.formatDecimal(order.totalPrice, 1, 2)}"></td>
-        <td th:text="${order.deliveryAddress}"></td>
-        <td th:text="${order.status}"></td>
-        <td>
-            <form class="inline" th:each="next : ${order.status.nextStatusesFor(ownerRole)}"
-                  th:action="@{/restaurant/orders/{id}/status(id=${order.id})}" method="post">
-                <input type="hidden" name="status" th:value="${next}" />
-                <button type="submit" th:text="${#strings.replace(next.name(), '_', ' ')}">Next</button>
-            </form>
-        </td>
-    </tr>
-</table>
+    <div th:replace="~{fragments/alerts :: flash}"></div>
 
-<!-- Menu -->
-<h3>Menu</h3>
-<p th:if="${#lists.isEmpty(menuItems)}">Your menu is empty. Add your first item below.</p>
-<table th:unless="${#lists.isEmpty(menuItems)}">
-    <tr><th>Name</th><th>Description</th><th>Price</th><th>Available</th><th>Actions</th></tr>
-    <tr th:each="item : ${menuItems}">
-        <td th:text="${item.name}"></td>
-        <td th:text="${item.description}"></td>
-        <td th:text="${#numbers.formatDecimal(item.price, 1, 2)}"></td>
-        <td th:text="${item.available} ? 'Yes' : 'No'"></td>
-        <td>
-            <a th:href="@{/restaurant/menu/edit/{id}(id=${item.id})}">Edit</a>
-            <form class="inline" th:action="@{/restaurant/menu/toggle/{id}(id=${item.id})}" method="post">
-                <button type="submit" th:text="${item.available} ? 'Mark unavailable' : 'Mark available'">Toggle</button>
-            </form>
-            <form class="inline" th:action="@{/restaurant/menu/delete/{id}(id=${item.id})}" method="post"
-                  onsubmit="return confirm('Delete this menu item?');">
-                <button type="submit">Delete</button>
-            </form>
-        </td>
-    </tr>
-</table>
+    <!-- Stats -->
+    <section class="grid grid-cols-3 gap-3 sm:gap-4">
+        <div class="card flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+            <span class="hidden size-11 shrink-0 place-items-center rounded-xl sm:grid bg-amber-100 text-amber-700"><svg th:replace="~{fragments/icons :: inbox('size-5')}"></svg></span>
+            <div><p class="text-xs text-stone-500 sm:text-sm">Active orders</p><p class="text-2xl font-extrabold text-stone-900" th:text="${activeOrderCount}">0</p></div>
+        </div>
+        <div class="card flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+            <span class="hidden size-11 shrink-0 place-items-center rounded-xl sm:grid bg-brand-100 text-brand-700"><svg th:replace="~{fragments/icons :: list('size-5')}"></svg></span>
+            <div><p class="text-xs text-stone-500 sm:text-sm">Menu items</p><p class="text-2xl font-extrabold text-stone-900" th:text="${#lists.size(menuItems)}">0</p></div>
+        </div>
+        <div class="card flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+            <span class="hidden size-11 shrink-0 place-items-center rounded-xl sm:grid bg-emerald-100 text-emerald-700"><svg th:replace="~{fragments/icons :: check-circle('size-5')}"></svg></span>
+            <div><p class="text-xs text-stone-500 sm:text-sm">Available now</p><p class="text-2xl font-extrabold text-stone-900" th:text="${availableItemCount}">0</p></div>
+        </div>
+    </section>
 
-<h4>Add Menu Item</h4>
-<form th:action="@{/restaurant/menu/add}" th:object="${menuItemRequest}" method="post">
-    <label>Name: <input type="text" th:field="*{name}" required maxlength="255" /></label>
-    <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red;"></span><br/><br/>
-    <label>Description: <input type="text" th:field="*{description}" maxlength="255" /></label>
-    <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}" style="color:red;"></span><br/><br/>
-    <label>Price: <input type="number" th:field="*{price}" required min="0.01" step="0.01" /></label>
-    <span th:if="${#fields.hasErrors('price')}" th:errors="*{price}" style="color:red;"></span><br/><br/>
-    <label>Image URL: <input type="url" th:field="*{imageUrl}" maxlength="255" /></label>
-    <span th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}" style="color:red;"></span><br/><br/>
-    <label><input type="checkbox" th:field="*{available}" /> Available</label><br/><br/>
-    <button type="submit">Add Item</button>
-</form>
+    <!-- Section nav -->
+    <nav class="sticky top-16 z-20 -mx-4 flex gap-1 overflow-x-auto border-b border-stone-200 bg-stone-50/90 px-4 py-2 backdrop-blur sm:mx-0 sm:rounded-xl sm:border sm:bg-white/90 sm:px-2">
+        <a href="#orders" class="btn btn-ghost btn-sm shrink-0">Orders</a>
+        <a href="#menu" class="btn btn-ghost btn-sm shrink-0">Menu</a>
+        <a href="#profile" class="btn btn-ghost btn-sm shrink-0">Profile</a>
+    </nav>
 
-<!-- Profile -->
-<h3>Restaurant Profile</h3>
-<form th:action="@{/restaurant/profile}" th:object="${restaurantRequest}" method="post">
-    <label>Name: <input type="text" th:field="*{name}" required maxlength="255" /></label>
-    <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red;"></span><br/><br/>
-    <label>Description: <input type="text" th:field="*{description}" maxlength="255" /></label>
-    <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}" style="color:red;"></span><br/><br/>
-    <label>Address: <input type="text" th:field="*{address}" required maxlength="255" /></label>
-    <span th:if="${#fields.hasErrors('address')}" th:errors="*{address}" style="color:red;"></span><br/><br/>
-    <label>Phone: <input type="text" th:field="*{phone}" maxlength="30" /></label>
-    <span th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" style="color:red;"></span><br/><br/>
-    <label><input type="checkbox" th:field="*{active}" /> Open for orders</label><br/><br/>
-    <button type="submit">Save Profile</button>
-</form>
+    <!-- Orders -->
+    <section id="orders" class="scroll-mt-32">
+        <div class="mb-4 flex items-end justify-between">
+            <div>
+                <h2 class="text-xl font-bold text-stone-900">Incoming orders</h2>
+                <p class="text-sm text-stone-500">Newest first. Move each order along as your kitchen works on it.</p>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(orders)}" class="card card-body flex flex-col items-center py-12 text-center">
+            <span class="grid size-12 place-items-center rounded-full bg-stone-100 text-stone-400"><svg th:replace="~{fragments/icons :: inbox('size-6')}"></svg></span>
+            <p class="mt-3 font-semibold text-stone-900">No orders yet</p>
+            <p class="text-sm text-stone-500">New orders will show up here as customers place them.</p>
+        </div>
+
+        <div th:unless="${#lists.isEmpty(orders)}" class="grid gap-4 lg:grid-cols-2">
+            <article th:each="order : ${orders}" class="card flex flex-col">
+                <header class="flex items-start justify-between gap-3 border-b border-stone-100 p-5">
+                    <div>
+                        <p class="font-bold text-stone-900">Order #<span th:text="${order.id}">1</span></p>
+                        <p class="mt-0.5 flex items-center gap-1.5 text-xs text-stone-500" th:if="${order.createdAt != null}">
+                            <svg th:replace="~{fragments/icons :: clock('size-3.5')}"></svg>
+                            <span th:text="${#temporals.format(order.createdAt, 'dd MMM yyyy, HH:mm')}">time</span>
+                        </p>
+                    </div>
+                    <th:block th:replace="~{fragments/status :: badge(${order.status})}"></th:block>
+                </header>
+                <div class="flex-1 space-y-4 p-5">
+                    <div class="grid gap-2 text-sm sm:grid-cols-2">
+                        <p class="flex items-center gap-2 text-stone-700">
+                            <svg th:replace="~{fragments/icons :: user('size-4 text-stone-400')}"></svg>
+                            <span th:text="${order.customer.fullName}">Customer</span>
+                        </p>
+                        <p class="flex items-center gap-2 text-stone-700">
+                            <svg th:replace="~{fragments/icons :: map-pin('size-4 text-stone-400')}"></svg>
+                            <span th:text="${order.deliveryAddress}">Address</span>
+                        </p>
+                    </div>
+                    <ul class="divide-y divide-stone-100 rounded-xl bg-stone-50 px-4 text-sm">
+                        <li th:each="orderItem : ${order.items}" class="flex justify-between py-2">
+                            <span><span class="font-semibold text-stone-900" th:text="${orderItem.quantity} + ' ×'">1 ×</span> <span th:text="${orderItem.menuItem.name}">Item</span></span>
+                            <span class="text-stone-500" th:text="${#numbers.formatDecimal(orderItem.priceAtPurchase, 1, 2)}">0.00</span>
+                        </li>
+                    </ul>
+                </div>
+                <footer class="flex flex-wrap items-center justify-between gap-3 border-t border-stone-100 p-5">
+                    <p class="text-sm text-stone-500">Total <span class="ml-1 text-lg font-extrabold text-stone-900" th:text="${#numbers.formatDecimal(order.totalPrice, 1, 2)}">0.00</span></p>
+                    <div class="flex flex-wrap gap-2">
+                        <form th:each="next : ${order.status.nextStatusesFor(ownerRole)}"
+                              th:action="@{/restaurant/orders/{id}/status(id=${order.id})}" method="post">
+                            <input type="hidden" name="status" th:value="${next}" />
+                            <button type="submit" class="btn btn-sm" th:classappend="${next.name() == 'CANCELLED'} ? 'btn-danger' : 'btn-primary'">
+                                <th:block th:replace="~{fragments/status :: action-label(${next})}"></th:block>
+                            </button>
+                        </form>
+                    </div>
+                </footer>
+            </article>
+        </div>
+    </section>
+
+    <!-- Menu -->
+    <section id="menu" class="scroll-mt-32">
+        <div class="mb-4">
+            <h2 class="text-xl font-bold text-stone-900">Menu</h2>
+            <p class="text-sm text-stone-500">Items customers can order. Hide an item instead of deleting it if it has been ordered before.</p>
+        </div>
+
+        <div class="grid gap-6 lg:grid-cols-3">
+            <div class="lg:col-span-2">
+                <div th:if="${#lists.isEmpty(menuItems)}" class="card card-body flex flex-col items-center py-12 text-center">
+                    <span class="grid size-12 place-items-center rounded-full bg-stone-100 text-stone-400"><svg th:replace="~{fragments/icons :: coffee('size-6')}"></svg></span>
+                    <p class="mt-3 font-semibold text-stone-900">Your menu is empty</p>
+                    <p class="text-sm text-stone-500">Add your first dish using the form.</p>
+                </div>
+
+                <div th:unless="${#lists.isEmpty(menuItems)}" class="grid gap-4 sm:grid-cols-2">
+                    <article th:each="item : ${menuItems}" class="card flex flex-col overflow-hidden" th:classappend="${item.available} ? '' : 'opacity-70'">
+                        <div class="relative aspect-[16/9] bg-gradient-to-br from-brand-100 to-amber-100">
+                            <img th:if="${!#strings.isEmpty(item.imageUrl)}" th:src="${item.imageUrl}" th:alt="${item.name}" class="absolute inset-0 size-full object-cover" loading="lazy" />
+                            <span th:if="${#strings.isEmpty(item.imageUrl)}" class="absolute inset-0 grid place-items-center text-brand-400">
+                                <svg th:replace="~{fragments/icons :: coffee('size-10')}"></svg>
+                            </span>
+                            <span th:unless="${item.available}" class="badge absolute left-3 top-3 bg-stone-900/80 text-white">Unavailable</span>
+                        </div>
+                        <div class="flex flex-1 flex-col p-4">
+                            <div class="flex items-start justify-between gap-3">
+                                <h3 class="font-bold text-stone-900" th:text="${item.name}">Item</h3>
+                                <p class="font-extrabold text-brand-600" th:text="${#numbers.formatDecimal(item.price, 1, 2)}">0.00</p>
+                            </div>
+                            <p class="mt-1 flex-1 text-sm text-stone-500" th:text="${item.description}">Description</p>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a th:href="@{/restaurant/menu/edit/{id}(id=${item.id})}" class="btn btn-secondary btn-sm">
+                                    <svg th:replace="~{fragments/icons :: edit('size-3.5')}"></svg> Edit
+                                </a>
+                                <form th:action="@{/restaurant/menu/toggle/{id}(id=${item.id})}" method="post">
+                                    <button type="submit" class="btn btn-secondary btn-sm">
+                                        <th:block th:if="${item.available}"><svg th:replace="~{fragments/icons :: eye-off('size-3.5')}"></svg> Hide</th:block>
+                                        <th:block th:unless="${item.available}"><svg th:replace="~{fragments/icons :: eye('size-3.5')}"></svg> Show</th:block>
+                                    </button>
+                                </form>
+                                <form th:action="@{/restaurant/menu/delete/{id}(id=${item.id})}" method="post"
+                                      onsubmit="return confirm('Delete this menu item?');">
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <svg th:replace="~{fragments/icons :: trash('size-3.5')}"></svg> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+
+            <!-- Add item -->
+            <aside class="lg:sticky lg:top-32 lg:self-start">
+                <form th:action="@{/restaurant/menu/add}" th:object="${menuItemRequest}" method="post" class="card card-body space-y-4">
+                    <h3 class="flex items-center gap-2 font-bold text-stone-900">
+                        <span class="grid size-8 place-items-center rounded-lg bg-brand-100 text-brand-700"><svg th:replace="~{fragments/icons :: plus('size-4')}"></svg></span>
+                        Add menu item
+                    </h3>
+                    <div>
+                        <label for="name" class="label">Name</label>
+                        <input type="text" th:field="*{name}" class="input" th:classappend="${#fields.hasErrors('name')} ? 'input-error'" placeholder="Carbonara" required maxlength="255" />
+                        <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="field-error"></p>
+                    </div>
+                    <div>
+                        <label for="price" class="label">Price</label>
+                        <input type="number" th:field="*{price}" class="input" th:classappend="${#fields.hasErrors('price')} ? 'input-error'" placeholder="12.50" required min="0.01" step="0.01" />
+                        <p th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="field-error"></p>
+                    </div>
+                    <div>
+                        <label for="description" class="label">Description</label>
+                        <input type="text" th:field="*{description}" class="input" th:classappend="${#fields.hasErrors('description')} ? 'input-error'" placeholder="Egg, pecorino, guanciale" maxlength="255" />
+                        <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="field-error"></p>
+                    </div>
+                    <div>
+                        <label for="imageUrl" class="label">Image URL</label>
+                        <input type="url" th:field="*{imageUrl}" class="input" th:classappend="${#fields.hasErrors('imageUrl')} ? 'input-error'" placeholder="https://…" maxlength="255" />
+                        <p th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}" class="field-error"></p>
+                    </div>
+                    <label class="flex items-center gap-3 text-sm font-medium text-stone-700">
+                        <input type="checkbox" th:field="*{available}" class="checkbox" /> Available to order
+                    </label>
+                    <button type="submit" class="btn btn-primary w-full">Add to menu</button>
+                </form>
+            </aside>
+        </div>
+    </section>
+
+    <!-- Profile -->
+    <section id="profile" class="scroll-mt-32">
+        <div class="mb-4">
+            <h2 class="text-xl font-bold text-stone-900">Restaurant profile</h2>
+            <p class="text-sm text-stone-500">How your restaurant appears to customers.</p>
+        </div>
+        <form th:action="@{/restaurant/profile}" th:object="${restaurantRequest}" method="post" class="card card-body grid gap-5 sm:grid-cols-2">
+            <div>
+                <label for="profile-name" class="label">Restaurant name</label>
+                <input id="profile-name" type="text" th:field="*{name}" class="input" th:classappend="${#fields.hasErrors('name')} ? 'input-error'" required maxlength="255" />
+                <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="field-error"></p>
+            </div>
+            <div>
+                <label for="profile-phone" class="label">Phone</label>
+                <input id="profile-phone" type="tel" th:field="*{phone}" class="input" th:classappend="${#fields.hasErrors('phone')} ? 'input-error'" maxlength="30" />
+                <p th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" class="field-error"></p>
+            </div>
+            <div class="sm:col-span-2">
+                <label for="profile-description" class="label">Description</label>
+                <input id="profile-description" type="text" th:field="*{description}" class="input" th:classappend="${#fields.hasErrors('description')} ? 'input-error'" maxlength="255" />
+                <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="field-error"></p>
+            </div>
+            <div class="sm:col-span-2">
+                <label for="profile-address" class="label">Address</label>
+                <input id="profile-address" type="text" th:field="*{address}" class="input" th:classappend="${#fields.hasErrors('address')} ? 'input-error'" required maxlength="255" />
+                <p th:if="${#fields.hasErrors('address')}" th:errors="*{address}" class="field-error"></p>
+            </div>
+            <label class="flex items-center gap-3 text-sm font-medium text-stone-700 sm:col-span-2">
+                <input id="profile-active" type="checkbox" th:field="*{active}" class="checkbox" /> Open for orders
+            </label>
+            <div class="sm:col-span-2 sm:flex sm:justify-end">
+                <button type="submit" class="btn btn-primary w-full sm:w-auto">Save profile</button>
+            </div>
+        </form>
+    </section>
+</main>
 </body>
 </html>

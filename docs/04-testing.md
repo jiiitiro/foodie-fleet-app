@@ -2,8 +2,8 @@
 
 Back to [SDLC.md](../SDLC.md)
 
-## 1. Current state (after M2)
-39 tests, all passing with `./mvnw verify` (Docker required):
+## 1. Current state (after M2.5)
+41 tests, all passing with `./mvnw verify` (Docker required):
 
 | Test class | Type | Covers |
 |---|---|---|
@@ -11,7 +11,7 @@ Back to [SDLC.md](../SDLC.md)
 | `service/AuthServiceTest` | Unit (Mockito) | Admin/missing role rejected, duplicate email, email normalisation, disabled user + verification email |
 | `model/OrderStatusTest` | Unit | Allowed/forbidden status transitions per role |
 | `controller/RestaurantControllerIntegrationTest` | Integration | Setup and profile, open/close, menu CRUD and validation, delete refused for items in past orders, order status flow, **wrong-owner → 404 on every endpoint** |
-| `security/SecurityIntegrationTest` | Integration (MockMvc + Testcontainers) | Registration (S1 regression, validation, CSRF), login outcomes (unverified / wrong password / success), role-based route access, login messages, 404 error page |
+| `security/SecurityIntegrationTest` | Integration (MockMvc + Testcontainers) | Registration (S1 regression, validation, CSRF), login outcomes (unverified / wrong password / success), role-based route access, login messages, 404 error page, public landing page, register role pre-selection |
 
 Shared setup: `TestcontainersConfiguration` (Postgres 15) + `@ActiveProfiles("test")`, with
 `EmailService` mocked. Integration classes share one context and database, so each test starts with

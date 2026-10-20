@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Order status pill. Class names are written out in full so Tailwind can find them. -->
+<th:block th:fragment="badge(status)" th:switch="${status.name()}">
+    <span th:case="'PLACED'" class="badge bg-amber-100 text-amber-800"><span class="size-1.5 rounded-full bg-amber-500"></span>New</span>
+    <span th:case="'ACCEPTED'" class="badge bg-sky-100 text-sky-800"><span class="size-1.5 rounded-full bg-sky-500"></span>Accepted</span>
+    <span th:case="'PREPARING'" class="badge bg-violet-100 text-violet-800"><span class="size-1.5 rounded-full bg-violet-500"></span>Preparing</span>
+    <span th:case="'READY_FOR_PICKUP'" class="badge bg-brand-100 text-brand-800"><span class="size-1.5 rounded-full bg-brand-500"></span>Ready for pickup</span>
+    <span th:case="'OUT_FOR_DELIVERY'" class="badge bg-indigo-100 text-indigo-800"><span class="size-1.5 rounded-full bg-indigo-500"></span>Out for delivery</span>
+    <span th:case="'DELIVERED'" class="badge bg-emerald-100 text-emerald-800"><span class="size-1.5 rounded-full bg-emerald-500"></span>Delivered</span>
+    <span th:case="'CANCELLED'" class="badge bg-stone-200 text-stone-700"><span class="size-1.5 rounded-full bg-stone-500"></span>Cancelled</span>
+</th:block>
+
+<!-- Button label for moving an order to the given status -->
+<th:block th:fragment="action-label(status)" th:switch="${status.name()}">
+    <th:block th:case="'ACCEPTED'">Accept</th:block>
+    <th:block th:case="'PREPARING'">Start preparing</th:block>
+    <th:block th:case="'READY_FOR_PICKUP'">Mark ready</th:block>
+    <th:block th:case="'OUT_FOR_DELIVERY'">Picked up</th:block>
+    <th:block th:case="'DELIVERED'">Delivered</th:block>
+    <th:block th:case="'CANCELLED'">Cancel</th:block>
+    <th:block th:case="*" th:text="${status}"></th:block>
+</th:block>
+</body>
+</html>

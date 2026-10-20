@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/app}">
+<head>
+    <title>Driver portal</title>
+</head>
+<body>
+<main layout:fragment="content" class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <div class="card card-body mx-auto max-w-xl text-center">
+        <span class="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-100 text-brand-700">
+            <svg th:replace="~{fragments/icons :: truck('size-7')}"></svg>
+        </span>
+        <h1 class="mt-5 text-2xl font-extrabold text-stone-900">Your delivery jobs are almost here.</h1>
+        <p class="mt-2 text-stone-600">Claiming ready orders and delivering them arrives in milestone M4.</p>
+        <span class="badge mx-auto mt-6 bg-amber-100 text-amber-800">Coming soon</span>
+    </div>
+</main>
+</body>
+</html>

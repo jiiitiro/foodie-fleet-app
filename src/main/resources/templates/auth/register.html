@@ -1,31 +1,76 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/auth}">
 <head>
-    <title>FoodieFleet - Register</title>
+    <title>Create an account</title>
 </head>
 <body>
-<h2>Create an Account</h2>
-<div th:if="${errorMessage}" style="color:red;" th:text="${errorMessage}"></div>
+<div layout:fragment="content">
+    <h1 class="text-3xl font-extrabold tracking-tight text-stone-900">Create your account</h1>
+    <p class="mt-2 text-stone-600">Join FoodieFleet in under a minute.</p>
 
-<form th:action="@{/auth/register}" th:object="${registerRequest}" method="post">
-    <label>Full Name: <input type="text" th:field="*{fullName}" required maxlength="255" /></label>
-    <span th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}" style="color:red;"></span><br/><br/>
-    <label>Email: <input type="email" th:field="*{email}" required maxlength="255" /></label>
-    <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" style="color:red;"></span><br/><br/>
-    <label>Password: <input type="password" th:field="*{password}" required minlength="8" maxlength="72" /></label>
-    <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}" style="color:red;"></span><br/><br/>
-    <label>Phone Number: <input type="text" th:field="*{phoneNumber}" maxlength="30" /></label>
-    <span th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}" style="color:red;"></span><br/><br/>
-    <label>Role:
-        <select th:field="*{role}">
-            <option value="CUSTOMER">Customer</option>
-            <option value="RESTAURANT_OWNER">Restaurant Owner</option>
-            <option value="DRIVER">Delivery Driver</option>
-        </select>
-    </label>
-    <span th:if="${#fields.hasErrors('role')}" th:errors="*{role}" style="color:red;"></span><br/><br/>
-    <button type="submit">Register</button>
-</form>
-<p>Already have an account? <a th:href="@{/auth/login}">Log in here</a></p>
+    <div th:if="${errorMessage}" class="alert alert-error mt-6" role="alert">
+        <svg th:replace="~{fragments/icons :: alert-circle('size-5 shrink-0')}"></svg>
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <form th:action="@{/auth/register}" th:object="${registerRequest}" method="post" class="mt-8 space-y-5" novalidate>
+        <fieldset>
+            <legend class="label">I want to join as</legend>
+            <div class="grid grid-cols-3 gap-3">
+                <label class="cursor-pointer">
+                    <input type="radio" th:field="*{role}" value="CUSTOMER" class="peer sr-only" />
+                    <span class="flex flex-col items-center gap-2 rounded-xl p-3 text-center text-xs font-semibold text-stone-600 ring-1 ring-stone-300 transition peer-checked:bg-brand-50 peer-checked:text-brand-700 peer-checked:ring-2 peer-checked:ring-brand-500 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 hover:bg-stone-50">
+                        <svg th:replace="~{fragments/icons :: bag('size-6')}"></svg> Customer
+                    </span>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" th:field="*{role}" value="RESTAURANT_OWNER" class="peer sr-only" />
+                    <span class="flex flex-col items-center gap-2 rounded-xl p-3 text-center text-xs font-semibold text-stone-600 ring-1 ring-stone-300 transition peer-checked:bg-brand-50 peer-checked:text-brand-700 peer-checked:ring-2 peer-checked:ring-brand-500 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 hover:bg-stone-50">
+                        <svg th:replace="~{fragments/icons :: store('size-6')}"></svg> Restaurant
+                    </span>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" th:field="*{role}" value="DRIVER" class="peer sr-only" />
+                    <span class="flex flex-col items-center gap-2 rounded-xl p-3 text-center text-xs font-semibold text-stone-600 ring-1 ring-stone-300 transition peer-checked:bg-brand-50 peer-checked:text-brand-700 peer-checked:ring-2 peer-checked:ring-brand-500 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 hover:bg-stone-50">
+                        <svg th:replace="~{fragments/icons :: truck('size-6')}"></svg> Driver
+                    </span>
+                </label>
+            </div>
+            <p th:if="${#fields.hasErrors('role')}" th:errors="*{role}" class="field-error"></p>
+        </fieldset>
+
+        <div>
+            <label for="fullName" class="label">Full name</label>
+            <input type="text" th:field="*{fullName}" class="input" th:classappend="${#fields.hasErrors('fullName')} ? 'input-error'" autocomplete="name" placeholder="Jane Doe" required maxlength="255" />
+            <p th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}" class="field-error"></p>
+        </div>
+        <div>
+            <label for="email" class="label">Email</label>
+            <input type="email" th:field="*{email}" class="input" th:classappend="${#fields.hasErrors('email')} ? 'input-error'" autocomplete="email" placeholder="you@example.com" required maxlength="255" />
+            <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="field-error"></p>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-2">
+            <div>
+                <label for="password" class="label">Password</label>
+                <input type="password" th:field="*{password}" class="input" th:classappend="${#fields.hasErrors('password')} ? 'input-error'" autocomplete="new-password" placeholder="8+ characters" required minlength="8" maxlength="72" />
+                <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="field-error"></p>
+            </div>
+            <div>
+                <label for="phoneNumber" class="label">Phone <span class="font-normal text-stone-400">(optional)</span></label>
+                <input type="tel" th:field="*{phoneNumber}" class="input" th:classappend="${#fields.hasErrors('phoneNumber')} ? 'input-error'" autocomplete="tel" maxlength="30" />
+                <p th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}" class="field-error"></p>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full py-3">Create account</button>
+    </form>
+
+    <p class="mt-8 text-center text-sm text-stone-600">
+        Already have an account?
+        <a th:href="@{/auth/login}" class="font-semibold text-brand-600 hover:text-brand-700">Log in</a>
+    </p>
+</div>
 </body>
 </html>

@@ -4,6 +4,7 @@ import com.foodiefleet.app.dto.request.MenuItemRequest;
 import com.foodiefleet.app.dto.request.RestaurantRequest;
 import com.foodiefleet.app.exception.ConflictException;
 import com.foodiefleet.app.model.MenuItem;
+import com.foodiefleet.app.model.Order;
 import com.foodiefleet.app.model.OrderStatus;
 import com.foodiefleet.app.model.Restaurant;
 import com.foodiefleet.app.model.Role;
@@ -18,7 +19,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Controller
 @RequestMapping("/restaurant")
@@ -26,6 +30,7 @@ import java.util.Optional;
 public class RestaurantController {
 
     private static final String REDIRECT_DASHBOARD = "redirect:/restaurant/dashboard";
+    private static final Set<OrderStatus> FINISHED_STATUSES = EnumSet.of(OrderStatus.DELIVERED, OrderStatus.CANCELLED);
 
     private final RestaurantService restaurantService;
     private final CurrentUserService currentUserService;
@@ -149,9 +154,14 @@ public class RestaurantController {
 
     // Keeps form objects already in the model (e.g. ones with validation errors)
     private void populateDashboard(Model model, Restaurant restaurant) {
+        List<MenuItem> menuItems = restaurantService.getMenuItems(restaurant);
+        List<Order> orders = restaurantService.getIncomingOrders(restaurant);
         model.addAttribute("restaurant", restaurant);
-        model.addAttribute("menuItems", restaurantService.getMenuItems(restaurant));
-        model.addAttribute("orders", restaurantService.getIncomingOrders(restaurant));
+        model.addAttribute("menuItems", menuItems);
+        model.addAttribute("orders", orders);
+        model.addAttribute("activeOrderCount",
+                orders.stream().filter(order -> !FINISHED_STATUSES.contains(order.getStatus())).count());
+        model.addAttribute("availableItemCount", menuItems.stream().filter(MenuItem::isAvailable).count());
         model.addAttribute("ownerRole", Role.RESTAURANT_OWNER);
         if (!model.containsAttribute("restaurantRequest")) {
             model.addAttribute("restaurantRequest", RestaurantRequest.from(restaurant));

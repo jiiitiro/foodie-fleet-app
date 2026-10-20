@@ -18,7 +18,8 @@ restaurants, restaurant owners manage menus and orders, and drivers deliver them
 
 ## Tech stack
 
-- Java 17, Spring Boot 3.2 (Web MVC, Security, Data JPA, Mail, Thymeleaf)
+- Java 17, Spring Boot 3.2 (Web MVC, Security, Data JPA, Mail, Thymeleaf + Layout Dialect)
+- Tailwind CSS 4 (compiled at build time; Node is installed by Maven automatically)
 - PostgreSQL 15
 - Maven (wrapper included), Lombok
 - Docker & Docker Compose
@@ -107,6 +108,27 @@ src/main/resources
 
 Tests use [Testcontainers](https://testcontainers.com/), so Docker must be running. No
 local database or `.env` is needed for `./mvnw verify`.
+
+### Front-end (Tailwind CSS)
+
+Styles live in `src/main/frontend/app.css` (theme tokens and component classes); templates are in
+`src/main/resources/templates` (`layouts/`, `fragments/`, pages). `./mvnw package` installs a local
+Node into `node/` and compiles the CSS to `src/main/resources/static/css/app.css`. That file is
+generated and git-ignored.
+
+While working on templates:
+
+```bash
+npm install          # once (or let Maven install Node and run npm ci)
+npm run watch:css    # rebuilds app.css whenever a template or app.css changes
+```
+
+Rebuild in IntelliJ (⌘F9) to copy changed templates and CSS; the `dev` profile turns off the
+template cache, so a browser refresh shows the change. To skip the CSS build in a Maven run (when
+`app.css` is already built), use `-Dskip.installnodenpm -Dskip.npm`.
+
+> **Fresh clone in IntelliJ?** Run `./mvnw generate-resources` (or `npm install && npm run build:css`)
+> once so `app.css` exists, otherwise pages render unstyled.
 
 ### Profiles
 

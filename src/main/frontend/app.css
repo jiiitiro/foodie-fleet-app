@@ -1,0 +1,66 @@
+/* FoodieFleet design system: Tailwind v4, compiled to static/css/app.css (npm run build:css). */
+@import "tailwindcss";
+
+/* Scan the Thymeleaf templates for class names */
+@source "../resources/templates";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand: warm tomato orange, appetite-friendly and high-energy */
+  --color-brand-50: #fff5ed;
+  --color-brand-100: #ffe8d4;
+  --color-brand-200: #ffcda8;
+  --color-brand-300: #ffaa71;
+  --color-brand-400: #ff7b38;
+  --color-brand-500: #fe5711;
+  --color-brand-600: #ef3c07;
+  --color-brand-700: #c62a08;
+  --color-brand-800: #9d230f;
+  --color-brand-900: #7e2010;
+  --color-brand-950: #440d06;
+}
+
+@layer base {
+  html { @apply h-full scroll-smooth; }
+  body { @apply min-h-full; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-brand-500; }
+}
+
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
+           transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-sm { @apply rounded-lg px-3 py-1.5 text-xs; }
+  .btn-primary { @apply bg-brand-600 text-white shadow-sm shadow-brand-600/20 hover:bg-brand-700; }
+  .btn-secondary { @apply bg-white text-stone-700 ring-1 ring-inset ring-stone-300 hover:bg-stone-50; }
+  .btn-ghost { @apply text-stone-600 hover:bg-stone-100 hover:text-stone-900; }
+  .btn-danger { @apply bg-white text-red-600 ring-1 ring-inset ring-red-200 hover:bg-red-50; }
+  .btn-success { @apply bg-emerald-600 text-white hover:bg-emerald-700; }
+
+  /* Surfaces */
+  .card { @apply rounded-2xl bg-white shadow-sm ring-1 ring-stone-200/80; }
+  .card-body { @apply p-5 sm:p-6; }
+
+  /* Forms */
+  .label { @apply mb-1.5 block text-sm font-medium text-stone-700; }
+  .input {
+    @apply block w-full rounded-xl border-0 bg-white px-3.5 py-2.5 text-sm text-stone-900 shadow-sm
+           ring-1 ring-inset ring-stone-300 placeholder:text-stone-400
+           focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-500;
+  }
+  .input-error { @apply ring-red-400 focus:ring-red-500; }
+  .field-error { @apply mt-1.5 text-sm text-red-600; }
+  .checkbox { @apply size-4 rounded border-stone-300 accent-brand-600; }
+
+  /* Badges */
+  .badge { @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap; }
+
+  /* Alerts */
+  .alert { @apply flex items-start gap-3 rounded-xl px-4 py-3 text-sm; }
+  .alert-success { @apply bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200; }
+  .alert-error { @apply bg-red-50 text-red-800 ring-1 ring-red-200; }
+  .alert-info { @apply bg-sky-50 text-sky-800 ring-1 ring-sky-200; }
+}

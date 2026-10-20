@@ -49,6 +49,21 @@ com.foodiefleet.app
 
 Should the codebase grow, consider package-by-feature (`auth/`, `restaurant/`, `order/`, …).
 
+### Front-end structure
+
+```
+src/main/frontend/app.css          Tailwind entry: @theme tokens + component classes (btn, card, input, badge, alert)
+src/main/resources/templates/
+├── layouts/app.html               App shell: navbar (role-aware), main, footer
+├── layouts/auth.html              Split-screen layout for login/register
+├── fragments/icons.html           Inline SVG icon set: ~{fragments/icons :: truck('size-5')}
+├── fragments/alerts.html          Flash messages (success / error)
+├── fragments/status.html          Order status badge + action button labels
+├── index.html                     Public landing page
+├── auth/, restaurant/, customer/, driver/, error.html
+static/css/app.css                 Generated (git-ignored)
+```
+
 ## 4. Data model
 
 ```mermaid
@@ -171,5 +186,7 @@ MenuItem item = menuItemRepository.findById(id)
 | ADR-4 | Flyway for schema | Reproducible, reviewable schema changes; replaces `ddl-auto=update` |
 | ADR-5 | Testcontainers for integration tests | Tests run against real Postgres, same as prod |
 | ADR-6 | Optimistic locking on `Order` | Prevents double-claiming by drivers without DB-level locks |
+| ADR-7 | Tailwind CSS 4 compiled by Maven (`frontend-maven-plugin`), not the Play CDN | Production-ready, small CSS (unused classes removed); one `./mvnw package` / `docker build` produces everything |
+| ADR-8 | Thymeleaf Layout Dialect + fragments, no SPA framework | Keeps server-rendered MVC (ADR-1); consistent shell and components without a JS build pipeline |
 
 Add new ADRs here, or as `docs/adr/NNN-title.md` if they need more than a line.

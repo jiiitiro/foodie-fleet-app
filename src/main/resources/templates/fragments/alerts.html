@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Flash messages set via RedirectAttributes ("success" / "error") -->
+<div th:fragment="flash" class="space-y-3" th:if="${success != null or error != null}">
+    <div th:if="${success}" class="alert alert-success" role="status">
+        <svg th:replace="~{fragments/icons :: check-circle('size-5 shrink-0')}"></svg>
+        <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-error" role="alert">
+        <svg th:replace="~{fragments/icons :: alert-circle('size-5 shrink-0')}"></svg>
+        <span th:text="${error}"></span>
+    </div>
+</div>
+</body>
+</html>

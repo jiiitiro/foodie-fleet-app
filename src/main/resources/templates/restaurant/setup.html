@@ -1,25 +1,49 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/app}">
 <head>
-    <title>FoodieFleet - Set Up Your Restaurant</title>
+    <title>Set up your restaurant</title>
 </head>
 <body>
-<h2>Set Up Your Restaurant</h2>
-<p>Tell customers about your restaurant. You can change these details later.</p>
+<main layout:fragment="content" class="mx-auto max-w-2xl px-4 py-10 sm:px-6 sm:py-16">
+    <div class="text-center">
+        <span class="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-100 text-brand-700">
+            <svg th:replace="~{fragments/icons :: store('size-7')}"></svg>
+        </span>
+        <h1 class="mt-5 text-3xl font-extrabold tracking-tight text-stone-900">Set up your restaurant</h1>
+        <p class="mt-2 text-stone-600">Tell customers who you are. You can change these details any time.</p>
+    </div>
 
-<form th:action="@{/restaurant/profile}" th:object="${restaurantRequest}" method="post">
-    <label>Name: <input type="text" th:field="*{name}" required maxlength="255" /></label>
-    <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red;"></span><br/><br/>
-    <label>Description: <input type="text" th:field="*{description}" maxlength="255" /></label>
-    <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}" style="color:red;"></span><br/><br/>
-    <label>Address: <input type="text" th:field="*{address}" required maxlength="255" /></label>
-    <span th:if="${#fields.hasErrors('address')}" th:errors="*{address}" style="color:red;"></span><br/><br/>
-    <label>Phone: <input type="text" th:field="*{phone}" maxlength="30" /></label>
-    <span th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" style="color:red;"></span><br/><br/>
-    <label><input type="checkbox" th:field="*{active}" /> Open for orders</label><br/><br/>
-    <button type="submit">Create Restaurant</button>
-</form>
-
-<form th:action="@{/auth/logout}" method="post"><button type="submit">Log out</button></form>
+    <form th:action="@{/restaurant/profile}" th:object="${restaurantRequest}" method="post" class="card card-body mt-10 space-y-5">
+        <div>
+            <label for="name" class="label">Restaurant name</label>
+            <input type="text" th:field="*{name}" class="input" th:classappend="${#fields.hasErrors('name')} ? 'input-error'" placeholder="e.g. Pasta Place" required maxlength="255" />
+            <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="field-error"></p>
+        </div>
+        <div>
+            <label for="description" class="label">Short description <span class="font-normal text-stone-400">(optional)</span></label>
+            <input type="text" th:field="*{description}" class="input" th:classappend="${#fields.hasErrors('description')} ? 'input-error'" placeholder="Fresh handmade pasta since 1998" maxlength="255" />
+            <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="field-error"></p>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-3">
+            <div class="sm:col-span-2">
+                <label for="address" class="label">Address</label>
+                <input type="text" th:field="*{address}" class="input" th:classappend="${#fields.hasErrors('address')} ? 'input-error'" placeholder="1 Main Street" required maxlength="255" />
+                <p th:if="${#fields.hasErrors('address')}" th:errors="*{address}" class="field-error"></p>
+            </div>
+            <div>
+                <label for="phone" class="label">Phone <span class="font-normal text-stone-400">(optional)</span></label>
+                <input type="tel" th:field="*{phone}" class="input" th:classappend="${#fields.hasErrors('phone')} ? 'input-error'" maxlength="30" />
+                <p th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" class="field-error"></p>
+            </div>
+        </div>
+        <label class="flex items-center gap-3 rounded-xl bg-stone-50 p-4 text-sm">
+            <input type="checkbox" th:field="*{active}" class="checkbox" />
+            <span><span class="font-semibold text-stone-900">Open for orders</span><br/><span class="text-stone-500">Customers can order from you as soon as your menu is ready.</span></span>
+        </label>
+        <button type="submit" class="btn btn-primary w-full py-3">Create restaurant</button>
+    </form>
+</main>
 </body>
 </html>

@@ -21,6 +21,10 @@ Select the profile with `SPRING_PROFILES_ACTIVE`.
 | IDE (`spring-boot:run`) | 8080 | localhost:5433 |
 | Docker Compose | host 8081 → container 8080 | host 5433 → container 5432 |
 
+> **Front-end build in Docker:** the build stage copies `package.json` / `package-lock.json`, and
+> `frontend-maven-plugin` downloads Node and runs `npm ci` + `npm run build:css` during `mvn package`,
+> so the image build needs access to nodejs.org and the npm registry.
+
 ## 3. Container improvements (M6)
 
 ```dockerfile

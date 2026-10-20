@@ -34,7 +34,7 @@ Detailed documentation for each SDLC stage lives in [`docs/`](docs):
 | `ADMIN` | Moderate users and restaurants, view platform metrics |
 
 **Tech stack:** Java 17 · Spring Boot 3.2.5 (Web, Security, Data JPA, Mail,
-Thymeleaf) · PostgreSQL 15 · Lombok · Maven · Docker / Docker Compose.
+Thymeleaf + Layout Dialect) · Tailwind CSS 4 · PostgreSQL 15 · Lombok · Maven · Docker / Docker Compose.
 
 **Architecture style:** server-rendered MVC monolith (Thymeleaf + session-based
 Spring Security). A REST/JWT API is planned for a later phase (see M8).
@@ -59,10 +59,11 @@ Spring Security). A REST/JWT API is planned for a later phase (see M8).
 | Orders | ⬜ Not started | `OrderService`, `CreateOrderRequest`, `OrderResponse` are empty files |
 | Error handling | ✅ Done (M1.5) | `GlobalExceptionHandler` + `error.html` |
 | JWT | ⬜ Deferred to M8 | Empty stubs removed in M1.5 |
-| Tests | 🟡 Growing | 39 tests: auth + order-status unit tests; security and restaurant-owner integration tests on Testcontainers |
+| Tests | 🟡 Growing | 41 tests: auth + order-status unit tests; security, page-rendering and restaurant-owner integration tests on Testcontainers |
 | CI/CD | ⬜ None | |
 | DB migrations | ✅ Done (M1.5) | Flyway `V1__init.sql`; Hibernate `ddl-auto=validate` |
 | Containerisation | ✅ Done | Multi-stage Dockerfile + Compose (app on 8081, DB on 5433) |
+| UI design system | ✅ Done (M2.5) | Tailwind CSS 4 built by Maven; shared layouts, components, responsive pages |
 
 ### 2.2 Defects found (must fix before new features)
 
@@ -113,7 +114,8 @@ gantt
     section Next
     M1.5 Stabilisation         :active,  m15, 2026-10-21, 7d
     M2 Restaurant owner        :         m2, after m15, 7d
-    M3 Customer ordering       :         m3, after m2, 14d
+    M2.5 UI design system      :         m25, after m2, 3d
+    M3 Customer ordering       :         m3, after m25, 14d
     M4 Driver delivery         :         m4, after m3, 7d
     M5 Admin                   :         m5, after m4, 7d
     M6 Hardening & CI/CD       :         m6, after m5, 7d
@@ -168,6 +170,28 @@ them until M3, so test orders currently have to be inserted directly into the da
 
 **DoD:** owner A cannot read or modify owner B's data (test-proven); all actions available in the UI.
 
+### M2.5 — UI design system (Tailwind + Thymeleaf)
+Goal: one consistent, responsive look across every page, so M3–M5 build screens from shared
+parts instead of starting from scratch each time.
+
+- [x] Tailwind CSS 4 compiled at build time: `frontend-maven-plugin` installs Node, runs `npm ci` and `npm run build:css`, and the output (`static/css/app.css`) is bundled into the jar and Docker image. No CDN script.
+- [x] Design tokens in `src/main/frontend/app.css`: brand palette (tomato orange), Plus Jakarta Sans, and component classes (`btn-*`, `card`, `input`, `label`, `badge`, `alert-*`)
+- [x] Thymeleaf Layout Dialect: `layouts/app.html` (navbar, footer, role-aware links) and `layouts/auth.html` (split-screen brand panel)
+- [x] Shared fragments: icon set, flash alerts, order-status badges and action labels
+- [x] Landing page at `/` (hero, role cards)
+- [x] Restyled pages: login, register (role picker cards), error, restaurant setup / dashboard / menu-edit, customer and driver placeholders
+- [x] Restaurant dashboard: stats row, order cards with status badges, menu cards, sticky add-item form, mobile-first layout
+- [x] Dev workflow: `npm run watch:css` and `spring.thymeleaf.cache=false` in `dev`
+- [x] Checked visually at 1280px and 390px widths
+
+**DoD:** every page uses a shared layout; works without horizontal scrolling at 390px; `./mvnw verify`
+and `docker build` produce a jar with the compiled CSS; all tests green (41).
+
+**UI conventions for later milestones:** build new pages on `layouts/app`, use the component
+classes before writing raw utility soup, and write full Tailwind class names in templates (no
+string-built class names), because the build only finds classes it can see. See
+[docs/03-implementation.md](docs/03-implementation.md#5-front-end-conventions).
+
 ### M3 — Customer ordering
 - [ ] Restaurant listing (active only) with search by name
 - [ ] Restaurant menu page (available items only)
@@ -200,7 +224,7 @@ them until M3, so test orders currently have to be inserted directly into the da
 - [ ] Rate limiting on `/auth/**` (e.g. Bucket4j)
 - [ ] Spring Boot Actuator (`health`, `info` only, exposed internally)
 - [ ] Non-root container user, healthchecks, `depends_on: condition: service_healthy`
-- [ ] Security headers (CSP, HSTS in prod), secure session cookie flags
+- [ ] Security headers (CSP, HSTS in prod), secure session cookie flags. The CSP must allow Google Fonts, or the font must be self-hosted. The inline `onsubmit` delete confirmations must move to a script file.
 - [ ] Structured logging; no PII in logs
 - [ ] JaCoCo coverage gate (≥ 70 % service layer)
 

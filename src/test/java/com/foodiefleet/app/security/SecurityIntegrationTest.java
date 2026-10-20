@@ -154,6 +154,22 @@ class SecurityIntegrationTest {
     // --- Route authorization -------------------------------------------------
 
     @Test
+    void landingPage_isPublic() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("index"))
+                .andExpect(content().string(containsString("Get started")));
+    }
+
+    @Test
+    void registerPage_preselectsCustomerRole() throws Exception {
+        mockMvc.perform(get("/auth/register"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.matchesPattern(
+                        "(?s).*value=\"CUSTOMER\"[^>]*checked.*")));
+    }
+
+    @Test
     void anonymousUser_isRedirectedToLogin() throws Exception {
         mockMvc.perform(get("/customer/home"))
                 .andExpect(status().is3xxRedirection())

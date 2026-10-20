@@ -32,3 +32,8 @@ build/
 ### VS Code ###
 .vscode/
 .env
+
+### Frontend build ###
+node/
+node_modules/
+src/main/resources/static/css/app.css

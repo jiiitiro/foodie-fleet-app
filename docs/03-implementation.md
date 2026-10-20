@@ -86,3 +86,20 @@ eventPublisher.publishEvent(new UserRegisteredEvent(user.getEmail(), token));
 @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 public void on(UserRegisteredEvent e) { sendVerificationEmail(e.email(), e.token()); }
 ```
+
+## 5. Front-end conventions
+
+- **Layouts:** every page declares `layout:decorate="~{layouts/app}"` (or `layouts/auth`) and puts its
+  markup in `layout:fragment="content"`. Set the page `<title>`; the layout appends "· FoodieFleet".
+- **Components first:** use `btn btn-primary|secondary|ghost|danger|success`, `card` / `card-body`,
+  `label` / `input` / `input-error` / `field-error`, `badge`, `alert alert-success|error|info`.
+  Add a new component class in `src/main/frontend/app.css` when a pattern repeats three or more times.
+- **No dynamic class names:** write full class names in templates (`th:classappend="${x} ? 'btn-danger' : 'btn-primary'"`).
+  Tailwind only generates classes it can find literally in the templates.
+- **Icons:** `<svg th:replace="~{fragments/icons :: name('size-5')}"></svg>`; add new icons to `fragments/icons.html`.
+- **Forms:** keep `th:action` (it adds the CSRF token); show errors with `th:errors` under each field
+  and `th:classappend="${#fields.hasErrors('x')} ? 'input-error'"` on the input.
+- **Flash messages:** set `success` / `error` with `RedirectAttributes`; render with `~{fragments/alerts :: flash}`.
+- **Responsive:** design at 390px first, then add `sm:` / `md:` / `lg:`. No horizontal page scrolling.
+- **Brand:** primary actions use `brand-600`; statuses use the colours in `fragments/status.html`.
+

@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ## [Unreleased]
 
+### Added (M2.5 UI design system)
+- Tailwind CSS 4 design system compiled by Maven (`frontend-maven-plugin`); output bundled into the jar and Docker image.
+- Thymeleaf Layout Dialect with `app` and `auth` layouts; shared icon, alert and order-status fragments.
+- Landing page at `/`.
+- Redesigned, responsive login, register (role picker), error, restaurant setup/dashboard/menu-edit, and customer/driver placeholder pages.
+- Restaurant dashboard stats (active orders, menu items, available items).
+
+### Changed (M2.5)
+- Customer and driver landing pages are now templates instead of inline HTML strings.
+- The register form pre-selects the Customer role.
+- `dev` profile disables the Thymeleaf template cache.
+
 ### Added (M2 restaurant owner)
 - Restaurant setup page on first login, and a dashboard with incoming orders, menu and profile.
 - Open/close restaurant button.
