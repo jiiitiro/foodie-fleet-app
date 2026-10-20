@@ -164,9 +164,10 @@ errors; S1 is closed and has a regression test.
 - [x] Incoming orders list; owner can move `PLACED → ACCEPTED → PREPARING → READY_FOR_PICKUP` or `CANCELLED`
 - [x] Order-status transitions enforced by a state machine (`OrderStatus.nextStatusesFor(Role)`)
 
-**Status (2026-10-20):** done on branch `feature/m2-restaurant-owner`; 16 new tests, including
-wrong-owner cases for every endpoint. The dashboard can show orders, but customers can't place
-them until M3, so test orders currently have to be inserted directly into the database.
+**Status (2026-10-21):** ✅ done and manually tested: setup, profile, open/close, menu CRUD and
+validation all work. 16 new automated tests, including wrong-owner cases for every endpoint.
+The order-handling buttons are covered by automated tests only. Customers can't place orders until
+M3, so the **manual test of the order flow is deferred to the M3 acceptance test**.
 
 **DoD:** owner A cannot read or modify owner B's data (test-proven); all actions available in the UI.
 
@@ -187,6 +188,8 @@ parts instead of starting from scratch each time.
 **DoD:** every page uses a shared layout; works without horizontal scrolling at 390px; `./mvnw verify`
 and `docker build` produce a jar with the compiled CSS; all tests green (41).
 
+**Status (2026-10-21):** ✅ done and manually tested in the browser.
+
 **UI conventions for later milestones:** build new pages on `layouts/app`, use the component
 classes before writing raw utility soup, and write full Tailwind class names in templates (no
 string-built class names), because the build only finds classes it can see. See
@@ -200,6 +203,7 @@ string-built class names), because the build only finds classes it can see. See
 - [ ] `OrderService.placeOrder()`, transactional
 - [ ] "My orders" page with status
 - [ ] Order confirmation email (async)
+- [ ] **Acceptance test (manual):** customer places an order → owner accepts, prepares and marks it ready on the dashboard (also covers the M2 order-flow test that was deferred)
 
 **DoD:** a customer can go from browsing to placing an order, and the stored total matches the server-side calculation.
 
