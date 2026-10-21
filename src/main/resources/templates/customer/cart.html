@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/app}">
+<head>
+    <title>Your cart</title>
+</head>
+<body>
+<main layout:fragment="content" class="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
+    <h1 class="text-2xl font-extrabold tracking-tight text-stone-900 sm:text-3xl">Your cart</h1>
+    <div th:replace="~{fragments/alerts :: flash}"></div>
+
+    <div th:if="${cart.isEmpty()}" class="card card-body flex flex-col items-center py-16 text-center">
+        <span class="grid size-14 place-items-center rounded-full bg-brand-100 text-brand-600"><svg th:replace="~{fragments/icons :: bag('size-7')}"></svg></span>
+        <p class="mt-4 text-lg font-bold text-stone-900">Your cart is empty</p>
+        <p class="text-sm text-stone-500">Find a restaurant and add a few dishes.</p>
+        <a th:href="@{/customer/home}" class="btn btn-primary mt-6">Browse restaurants</a>
+    </div>
+
+    <div th:unless="${cart.isEmpty()}" class="grid gap-6 lg:grid-cols-5">
+        <!-- Lines -->
+        <section class="card lg:col-span-3 lg:self-start">
+            <header class="flex items-center justify-between border-b border-stone-100 p-5">
+                <div>
+                    <p class="text-xs text-stone-500">Ordering from</p>
+                    <a th:href="@{/customer/restaurants/{id}(id=${cart.restaurant().id})}" class="font-bold text-stone-900 hover:text-brand-700" th:text="${cart.restaurant().name}">Restaurant</a>
+                </div>
+                <form th:action="@{/customer/cart/clear}" method="post">
+                    <button type="submit" class="btn btn-ghost btn-sm">Clear cart</button>
+                </form>
+            </header>
+
+            <div th:unless="${cart.restaurantOpen()}" class="alert alert-error m-5 mb-0">
+                <svg th:replace="~{fragments/icons :: alert-circle('size-5 shrink-0')}"></svg>
+                <span><span th:text="${cart.restaurant().name}">Restaurant</span> has closed. You can't check out until it opens again.</span>
+            </div>
+
+            <ul class="divide-y divide-stone-100">
+                <li th:each="line : ${cart.lines()}" class="flex flex-wrap items-center gap-4 p-5" th:classappend="${line.available()} ? '' : 'bg-red-50/50'">
+                    <div class="min-w-0 flex-1">
+                        <p class="font-semibold text-stone-900" th:text="${line.item().name}">Item</p>
+                        <p class="text-sm text-stone-500" th:text="${#numbers.formatDecimal(line.item().price, 1, 2)} + ' each'">0.00 each</p>
+                        <p th:unless="${line.available()}" class="mt-1 text-sm font-medium text-red-600">No longer available. Please remove it.</p>
+                    </div>
+                    <div class="flex items-center gap-1 rounded-xl ring-1 ring-stone-200">
+                        <form th:action="@{/customer/cart/update}" method="post">
+                            <input type="hidden" name="menuItemId" th:value="${line.item().id}" />
+                            <input type="hidden" name="quantity" th:value="${line.quantity() - 1}" />
+                            <button type="submit" class="btn btn-ghost btn-sm" th:attr="aria-label='Decrease ' + ${line.item().name}">
+                                <svg th:replace="~{fragments/icons :: minus('size-4')}"></svg>
+                            </button>
+                        </form>
+                        <span class="w-6 text-center text-sm font-bold" th:text="${line.quantity()}">1</span>
+                        <form th:action="@{/customer/cart/update}" method="post">
+                            <input type="hidden" name="menuItemId" th:value="${line.item().id}" />
+                            <input type="hidden" name="quantity" th:value="${line.quantity() + 1}" />
+                            <button type="submit" class="btn btn-ghost btn-sm" th:disabled="${line.quantity() >= maxQuantity}" th:attr="aria-label='Increase ' + ${line.item().name}">
+                                <svg th:replace="~{fragments/icons :: plus('size-4')}"></svg>
+                            </button>
+                        </form>
+                    </div>
+                    <p class="w-20 text-right font-bold text-stone-900" th:text="${#numbers.formatDecimal(line.lineTotal(), 1, 2)}">0.00</p>
+                    <form th:action="@{/customer/cart/remove}" method="post">
+                        <input type="hidden" name="menuItemId" th:value="${line.item().id}" />
+                        <button type="submit" class="btn btn-ghost btn-sm text-stone-400 hover:text-red-600" th:attr="aria-label='Remove ' + ${line.item().name}">
+                            <svg th:replace="~{fragments/icons :: x('size-4')}"></svg>
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Checkout -->
+        <aside class="lg:col-span-2">
+            <form th:action="@{/customer/checkout}" th:object="${createOrderRequest}" method="post" class="card card-body space-y-5 lg:sticky lg:top-24">
+                <h2 class="font-bold text-stone-900">Checkout</h2>
+                <div>
+                    <label for="deliveryAddress" class="label">Delivery address</label>
+                    <textarea th:field="*{deliveryAddress}" rows="3" class="input" th:classappend="${#fields.hasErrors('deliveryAddress')} ? 'input-error'"
+                              placeholder="Street, number, apartment, city" required maxlength="255"></textarea>
+                    <p th:if="${#fields.hasErrors('deliveryAddress')}" th:errors="*{deliveryAddress}" class="field-error"></p>
+                </div>
+                <dl class="space-y-2 border-t border-stone-100 pt-4 text-sm">
+                    <div class="flex justify-between text-stone-600"><dt>Items</dt><dd th:text="${cart.itemCount()}">0</dd></div>
+                    <div class="flex justify-between text-base font-extrabold text-stone-900"><dt>Total</dt><dd th:text="${#numbers.formatDecimal(cart.total(), 1, 2)}">0.00</dd></div>
+                </dl>
+                <p class="text-xs text-stone-500">You pay the driver on delivery. Prices are confirmed when you place the order.</p>
+                <button type="submit" class="btn btn-primary w-full py-3" th:disabled="${!cart.canCheckout()}">Place order</button>
+            </form>
+        </aside>
+    </div>
+</main>
+</body>
+</html>

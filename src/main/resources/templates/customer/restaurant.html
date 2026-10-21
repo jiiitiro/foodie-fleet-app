@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/app}">
+<head>
+    <title th:text="${restaurant.name}">Restaurant</title>
+</head>
+<body>
+<main layout:fragment="content" class="pb-24 lg:pb-0">
+    <!-- Header -->
+    <section class="bg-gradient-to-br from-brand-500 to-brand-700 text-white">
+        <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+            <a th:href="@{/customer/home}" class="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand-100 hover:text-white">
+                <svg th:replace="~{fragments/icons :: arrow-left('size-4')}"></svg> All restaurants
+            </a>
+            <div class="flex flex-wrap items-center gap-3">
+                <h1 class="text-3xl font-extrabold tracking-tight sm:text-4xl" th:text="${restaurant.name}">Restaurant</h1>
+                <span th:if="${restaurant.active}" class="badge bg-white/90 text-emerald-700"><span class="size-1.5 rounded-full bg-emerald-500"></span>Open</span>
+                <span th:unless="${restaurant.active}" class="badge bg-stone-900/70 text-white">Closed</span>
+            </div>
+            <p class="mt-2 max-w-2xl text-brand-50" th:text="${restaurant.description}">Description</p>
+            <div class="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-brand-100">
+                <span class="flex items-center gap-1.5"><svg th:replace="~{fragments/icons :: map-pin('size-4')}"></svg><span th:text="${restaurant.address}">Address</span></span>
+                <span th:if="${restaurant.phone}" class="flex items-center gap-1.5"><svg th:replace="~{fragments/icons :: phone('size-4')}"></svg><span th:text="${restaurant.phone}">Phone</span></span>
+            </div>
+        </div>
+    </section>
+
+    <div class="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-3">
+        <!-- Menu -->
+        <section class="space-y-4 lg:col-span-2">
+            <div th:replace="~{fragments/alerts :: flash}"></div>
+            <div th:unless="${restaurant.active}" class="alert alert-info">
+                <svg th:replace="~{fragments/icons :: clock('size-5 shrink-0')}"></svg>
+                <span>This restaurant is closed right now. You can look at the menu, but ordering is paused.</span>
+            </div>
+
+            <h2 class="text-xl font-bold text-stone-900">Menu</h2>
+            <div th:if="${#lists.isEmpty(menuItems)}" class="card card-body py-12 text-center text-stone-500">
+                Nothing on the menu right now.
+            </div>
+            <article th:each="item : ${menuItems}" class="card flex gap-4 p-4">
+                <div class="relative size-24 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-brand-100 to-amber-100 sm:size-28">
+                    <span class="absolute inset-0 grid place-items-center text-brand-400">
+                        <svg th:replace="~{fragments/icons :: coffee('size-8')}"></svg>
+                    </span>
+                    <img th:if="${!#strings.isEmpty(item.imageUrl)}" th:src="${item.imageUrl}" th:alt="${item.name}" class="absolute inset-0 size-full object-cover" loading="lazy" data-fallback />
+                </div>
+                <div class="flex min-w-0 flex-1 flex-col">
+                    <div class="flex items-start justify-between gap-3">
+                        <h3 class="font-bold text-stone-900" th:text="${item.name}">Item</h3>
+                        <p class="shrink-0 font-extrabold text-brand-600" th:text="${#numbers.formatDecimal(item.price, 1, 2)}">0.00</p>
+                    </div>
+                    <p class="mt-1 flex-1 text-sm text-stone-500" th:text="${item.description}">Description</p>
+                    <form th:action="@{/customer/cart/add}" method="post" class="mt-3 flex items-center justify-end gap-2">
+                        <input type="hidden" name="menuItemId" th:value="${item.id}" />
+                        <input type="hidden" name="restaurantId" th:value="${restaurant.id}" />
+                        <label th:for="'qty-' + ${item.id}" class="sr-only">Quantity</label>
+                        <input th:id="'qty-' + ${item.id}" type="number" name="quantity" value="1" min="1" th:max="${maxQuantity}"
+                               class="input w-20 py-2 text-center" th:disabled="${!restaurant.active}" />
+                        <button type="submit" class="btn btn-primary" th:disabled="${!restaurant.active}">
+                            <svg th:replace="~{fragments/icons :: plus('size-4')}"></svg> Add
+                        </button>
+                    </form>
+                </div>
+            </article>
+        </section>
+
+        <!-- Cart summary (desktop) -->
+        <aside class="hidden lg:block lg:sticky lg:top-24 lg:self-start">
+            <div class="card card-body">
+                <h2 class="flex items-center gap-2 font-bold text-stone-900">
+                    <svg th:replace="~{fragments/icons :: bag('size-5 text-brand-600')}"></svg> Your cart
+                </h2>
+                <p th:if="${cart.isEmpty()}" class="mt-4 text-sm text-stone-500">Your cart is empty. Add something tasty!</p>
+                <th:block th:unless="${cart.isEmpty()}">
+                    <p class="mt-1 text-xs text-stone-500">From <span class="font-semibold text-stone-700" th:text="${cart.restaurant().name}">Restaurant</span></p>
+                    <ul class="mt-4 divide-y divide-stone-100 text-sm">
+                        <li th:each="line : ${cart.lines()}" class="flex justify-between gap-3 py-2">
+                            <span><span class="font-semibold" th:text="${line.quantity()} + ' ×'">1 ×</span> <span th:text="${line.item().name}">Item</span></span>
+                            <span class="text-stone-500" th:text="${#numbers.formatDecimal(line.lineTotal(), 1, 2)}">0.00</span>
+                        </li>
+                    </ul>
+                    <div class="mt-3 flex justify-between border-t border-stone-200 pt-3 font-bold text-stone-900">
+                        <span>Total</span><span th:text="${#numbers.formatDecimal(cart.total(), 1, 2)}">0.00</span>
+                    </div>
+                    <a th:href="@{/customer/cart}" class="btn btn-primary mt-4 w-full">Go to checkout</a>
+                </th:block>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Cart bar (mobile) -->
+    <a th:unless="${cart.isEmpty()}" th:href="@{/customer/cart}"
+       class="fixed inset-x-4 bottom-4 z-30 flex items-center justify-between rounded-2xl bg-brand-600 px-5 py-4 font-semibold text-white shadow-xl shadow-brand-600/30 lg:hidden">
+        <span class="flex items-center gap-2"><svg th:replace="~{fragments/icons :: bag('size-5')}"></svg><span>View cart (<span th:text="${cart.itemCount()}">0</span>)</span></span>
+        <span th:text="${#numbers.formatDecimal(cart.total(), 1, 2)}">0.00</span>
+    </a>
+</main>
+</body>
+</html>

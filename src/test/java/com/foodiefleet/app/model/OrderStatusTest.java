@@ -37,6 +37,14 @@ class OrderStatusTest {
     }
 
     @Test
+    void isCancellableBy_matchesTransitionRules() {
+        assertThat(PLACED.isCancellableBy(Role.CUSTOMER)).isTrue();
+        assertThat(ACCEPTED.isCancellableBy(Role.CUSTOMER)).isFalse();
+        assertThat(ACCEPTED.isCancellableBy(Role.RESTAURANT_OWNER)).isTrue();
+        assertThat(OUT_FOR_DELIVERY.isCancellableBy(Role.DRIVER)).isFalse();
+    }
+
+    @Test
     void terminalStatuses_haveNoNextStatus() {
         for (Role role : Role.values()) {
             assertThat(DELIVERED.nextStatusesFor(role)).isEmpty();

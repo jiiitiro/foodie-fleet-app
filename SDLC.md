@@ -53,13 +53,13 @@ Spring Security). A REST/JWT API is planned for a later phase (see M8).
 | Email verification | ✅ Done | Async email over Gmail SMTP, token valid for 24 h |
 | RBAC route guards | ✅ Done | `/customer/**`, `/restaurant/**`, `/driver/**`, `/admin/**` |
 | Restaurant owner module | ✅ Done (M2) | Setup, dashboard, menu CRUD, order handling; ownership-scoped |
-| Customer module | ⬜ Placeholder | Returns a hard-coded HTML string |
-| Driver module | ⬜ Placeholder | Returns a hard-coded HTML string |
+| Customer module | ✅ Done (M3) | Browse/search, restaurant menu, session cart, checkout, my orders, order tracker, cancel |
+| Driver module | ⬜ Placeholder | "Coming soon" page until M4 |
 | Admin module | ⬜ Not started | Route exists in security config only |
-| Orders | ⬜ Not started | `OrderService`, `CreateOrderRequest`, `OrderResponse` are empty files |
+| Orders | ✅ Done (M3) | `OrderService.placeOrder` (server-side pricing), confirmation email after commit |
 | Error handling | ✅ Done (M1.5) | `GlobalExceptionHandler` + `error.html` |
 | JWT | ⬜ Deferred to M8 | Empty stubs removed in M1.5 |
-| Tests | 🟡 Growing | 41 tests: auth + order-status unit tests; security, page-rendering and restaurant-owner integration tests on Testcontainers |
+| Tests | 🟡 Growing | 62 tests: unit tests plus security, restaurant-owner and customer-ordering integration tests (incl. automated acceptance flow) on Testcontainers |
 | CI/CD | ⬜ None | |
 | DB migrations | ✅ Done (M1.5) | Flyway `V1__init.sql`; Hibernate `ddl-auto=validate` |
 | Containerisation | ✅ Done | Multi-stage Dockerfile + Compose (app on 8081, DB on 5433) |
@@ -196,14 +196,19 @@ string-built class names), because the build only finds classes it can see. See
 [docs/03-implementation.md](docs/03-implementation.md#5-front-end-conventions).
 
 ### M3 — Customer ordering
-- [ ] Restaurant listing (active only) with search by name
-- [ ] Restaurant menu page (available items only)
-- [ ] Session-scoped cart (add/remove/update quantity, single restaurant per cart)
-- [ ] Checkout: delivery address, `CreateOrderRequest`, server-side price calculation using `priceAtPurchase` (never trust client prices)
-- [ ] `OrderService.placeOrder()`, transactional
-- [ ] "My orders" page with status
-- [ ] Order confirmation email (async)
+- [x] Restaurant listing (open restaurants only) with case-insensitive search by name
+- [x] Restaurant menu page (available items only; closed restaurants show the menu with ordering paused)
+- [x] Session-scoped cart (add / change quantity / remove / clear, max 20 per item, one restaurant per cart). The cart stores only item ids and quantities.
+- [x] Checkout: delivery address (pre-filled from the last order), `CreateOrderRequest`, prices read from the DB at checkout into `priceAtPurchase` (never trusts client prices)
+- [x] `OrderService.placeOrder()`, transactional; re-checks the restaurant is open and every item is available
+- [x] "My orders" page and order detail with a progress tracker
+- [x] Customer can cancel while the order is `PLACED` (CUST-6)
+- [x] Order confirmation email, sent asynchronously and only after the order commits (`OrderPlacedEvent` + `@TransactionalEventListener`)
+- [x] Automated acceptance test: customer orders → owner accepts, prepares, marks ready → customer sees "Ready"
 - [ ] **Acceptance test (manual):** customer places an order → owner accepts, prepares and marks it ready on the dashboard (also covers the M2 order-flow test that was deferred)
+
+**Status (2026-10-21):** implemented on branch `feature/m3-customer-ordering`; 62 automated tests
+pass (21 new). Waiting on the manual acceptance test.
 
 **DoD:** a customer can go from browsing to placing an order, and the stored total matches the server-side calculation.
 

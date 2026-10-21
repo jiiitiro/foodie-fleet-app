@@ -2,8 +2,8 @@
 
 Back to [SDLC.md](../SDLC.md)
 
-## 1. Current state (after M2.5)
-41 tests, all passing with `./mvnw verify` (Docker required):
+## 1. Current state (after M3)
+62 tests, all passing with `./mvnw verify` (Docker required):
 
 | Test class | Type | Covers |
 |---|---|---|
@@ -11,6 +11,7 @@ Back to [SDLC.md](../SDLC.md)
 | `service/AuthServiceTest` | Unit (Mockito) | Admin/missing role rejected, duplicate email, email normalisation, disabled user + verification email |
 | `model/OrderStatusTest` | Unit | Allowed/forbidden status transitions per role |
 | `controller/RestaurantControllerIntegrationTest` | Integration | Setup and profile, open/close, menu CRUD and validation, delete refused for items in past orders, order status flow, **wrong-owner → 404 on every endpoint** |
+| `controller/CustomerOrderingIntegrationTest` | Integration | Browse and search, cart rules (unavailable item, closed restaurant, second restaurant, max quantity), checkout at **current DB prices**, refusals (blank address, item became unavailable, restaurant closed, empty cart), confirmation email, own-orders only, cancel rules, **automated acceptance flow** |
 | `security/SecurityIntegrationTest` | Integration (MockMvc + Testcontainers) | Registration (S1 regression, validation, CSRF), login outcomes (unverified / wrong password / success), role-based route access, login messages, 404 error page, public landing page, register role pre-selection |
 
 Shared setup: `TestcontainersConfiguration` (Postgres 15) + `@ActiveProfiles("test")`, with
@@ -75,8 +76,8 @@ Mock `JavaMailSender` with `@MockBean` in integration tests so no real email is 
 - [ ] Only allowed status transitions succeed
 
 ### Orders
-- [ ] Total computed from DB prices, ignoring client-supplied prices
-- [ ] Unavailable item or closed restaurant → rejected
+- [x] Total computed from DB prices, ignoring client-supplied prices
+- [x] Unavailable item or closed restaurant → rejected
 - [ ] Order placement is atomic (failure mid-way leaves no rows)
 - [ ] Concurrent driver claim: exactly one succeeds (`@Version`)
 

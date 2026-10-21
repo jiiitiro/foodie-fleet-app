@@ -62,6 +62,7 @@ src/main/resources/templates/
 ├── index.html                     Public landing page
 ├── auth/, restaurant/, customer/, driver/, error.html
 static/css/app.css                 Generated (git-ignored)
+static/js/app.js                   Tiny shared script: swaps broken `data-fallback` images for their placeholder
 ```
 
 ## 4. Data model
@@ -188,5 +189,7 @@ MenuItem item = menuItemRepository.findById(id)
 | ADR-6 | Optimistic locking on `Order` | Prevents double-claiming by drivers without DB-level locks |
 | ADR-7 | Tailwind CSS 4 compiled by Maven (`frontend-maven-plugin`), not the Play CDN | Production-ready, small CSS (unused classes removed); one `./mvnw package` / `docker build` produces everything |
 | ADR-8 | Thymeleaf Layout Dialect + fragments, no SPA framework | Keeps server-rendered MVC (ADR-1); consistent shell and components without a JS build pipeline |
+| ADR-9 | Session-scoped cart (`@SessionScope` bean) holding only item ids + quantities | No extra tables; prices can't be tampered with; checkout re-validates everything. Lost on logout, which is acceptable for 1.0 |
+| ADR-10 | Domain events for side effects (`OrderPlacedEvent` → `@TransactionalEventListener(AFTER_COMMIT)`) | Emails go out only for committed orders and checkout stays decoupled from notifications |
 
 Add new ADRs here, or as `docs/adr/NNN-title.md` if they need more than a line.

@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface MenuItemRepository extends JpaRepository<MenuItem, Long> {
-    List<MenuItem> findByRestaurantAndAvailableTrue(Restaurant restaurant);
+    List<MenuItem> findByRestaurantAndAvailableTrueOrderByNameAsc(Restaurant restaurant);
 
     List<MenuItem> findByRestaurantOrderByNameAsc(Restaurant restaurant);
 

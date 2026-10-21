@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/app}">
+<head>
+    <title>My orders</title>
+</head>
+<body>
+<main layout:fragment="content" class="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6">
+    <h1 class="text-2xl font-extrabold tracking-tight text-stone-900 sm:text-3xl">My orders</h1>
+    <div th:replace="~{fragments/alerts :: flash}"></div>
+
+    <div th:if="${#lists.isEmpty(orders)}" class="card card-body flex flex-col items-center py-16 text-center">
+        <span class="grid size-14 place-items-center rounded-full bg-stone-100 text-stone-400"><svg th:replace="~{fragments/icons :: inbox('size-7')}"></svg></span>
+        <p class="mt-4 text-lg font-bold text-stone-900">No orders yet</p>
+        <p class="text-sm text-stone-500">Your orders will appear here.</p>
+        <a th:href="@{/customer/home}" class="btn btn-primary mt-6">Browse restaurants</a>
+    </div>
+
+    <ul th:unless="${#lists.isEmpty(orders)}" class="space-y-3">
+        <li th:each="order : ${orders}">
+            <a th:href="@{/customer/orders/{id}(id=${order.id})}" class="card flex flex-wrap items-center gap-4 p-5 transition hover:shadow-md">
+                <span class="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-100 text-brand-700"><svg th:replace="~{fragments/icons :: store('size-6')}"></svg></span>
+                <div class="min-w-0 flex-1">
+                    <p class="font-bold text-stone-900"><span th:text="${order.restaurant.name}">Restaurant</span> <span class="font-medium text-stone-400">· #<span th:text="${order.id}">1</span></span></p>
+                    <p class="text-sm text-stone-500">
+                        <span th:text="${#lists.size(order.items)}">1</span> item(s)
+                        <th:block th:if="${order.createdAt != null}">· <span th:text="${#temporals.format(order.createdAt, 'dd MMM yyyy, HH:mm')}">date</span></th:block>
+                    </p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <th:block th:replace="~{fragments/status :: badge(${order.status})}"></th:block>
+                    <span class="font-extrabold text-stone-900" th:text="${#numbers.formatDecimal(order.totalPrice, 1, 2)}">0.00</span>
+                </div>
+            </a>
+        </li>
+    </ul>
+</main>
+</body>
+</html>

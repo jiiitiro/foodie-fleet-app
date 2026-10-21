@@ -97,6 +97,9 @@ public void on(UserRegisteredEvent e) { sendVerificationEmail(e.email(), e.token
 - **No dynamic class names:** write full class names in templates (`th:classappend="${x} ? 'btn-danger' : 'btn-primary'"`).
   Tailwind only generates classes it can find literally in the templates.
 - **Icons:** `<svg th:replace="~{fragments/icons :: name('size-5')}"></svg>`; add new icons to `fragments/icons.html`.
+- **User-supplied images:** always render the placeholder, then the `<img data-fallback>` on top of it.
+  `static/js/app.js` removes an image that fails to load, so the placeholder shows through. Don't use
+  inline `onerror` handlers; they would break under the planned Content Security Policy.
 - **Forms:** keep `th:action` (it adds the CSRF token); show errors with `th:errors` under each field
   and `th:classappend="${#fields.hasErrors('x')} ? 'input-error'"` on the input.
 - **Flash messages:** set `success` / `error` with `RedirectAttributes`; render with `~{fragments/alerts :: flash}`.
