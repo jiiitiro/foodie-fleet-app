@@ -3,7 +3,9 @@
 Back to [SDLC.md](../SDLC.md)
 
 ## 1. Current state (after M3)
-62 tests, all passing with `./mvnw verify` (Docker required):
+62 tests, all passing with `./mvnw verify` (Docker required). The M3 order flow (customer orders →
+owner accepts, prepares, marks ready → customer sees "Ready") was also tested manually in the
+browser on 2026-10-22, which closes the order-flow test deferred from M2.
 
 | Test class | Type | Covers |
 |---|---|---|

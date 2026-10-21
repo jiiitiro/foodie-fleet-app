@@ -132,7 +132,7 @@ Domain entities, repositories, Postgres via Compose, Dockerfile.
 Registration, BCrypt hashing, form login/logout, async email verification,
 role-based route guards and post-login redirects.
 
-### M1.5 — Stabilisation 🎯 *current*
+### M1.5 — Stabilisation ✅
 Goal: the app starts, the existing features are secure, and tests run without
 external services.
 
@@ -167,7 +167,7 @@ errors; S1 is closed and has a regression test.
 **Status (2026-10-21):** ✅ done and manually tested: setup, profile, open/close, menu CRUD and
 validation all work. 16 new automated tests, including wrong-owner cases for every endpoint.
 The order-handling buttons are covered by automated tests only. Customers can't place orders until
-M3, so the **manual test of the order flow is deferred to the M3 acceptance test**.
+M3, so the **manual test of the order flow is deferred to the M3 acceptance test** (passed 2026-10-22).
 
 **DoD:** owner A cannot read or modify owner B's data (test-proven); all actions available in the UI.
 
@@ -205,14 +205,15 @@ string-built class names), because the build only finds classes it can see. See
 - [x] Customer can cancel while the order is `PLACED` (CUST-6)
 - [x] Order confirmation email, sent asynchronously and only after the order commits (`OrderPlacedEvent` + `@TransactionalEventListener`)
 - [x] Automated acceptance test: customer orders → owner accepts, prepares, marks ready → customer sees "Ready"
-- [ ] **Acceptance test (manual):** customer places an order → owner accepts, prepares and marks it ready on the dashboard (also covers the M2 order-flow test that was deferred)
+- [x] **Acceptance test (manual):** customer places an order → owner accepts, prepares and marks it ready on the dashboard (also covers the M2 order-flow test that was deferred)
 
-**Status (2026-10-21):** implemented on branch `feature/m3-customer-ordering`; 62 automated tests
-pass (21 new). Waiting on the manual acceptance test.
+**Status (2026-10-22):** ✅ done and manually tested in the browser: customer ordered, owner
+accepted, prepared and marked it ready, and the customer saw "Ready". 62 automated tests pass
+(21 new). Merged into `main-dev` via PR #3.
 
 **DoD:** a customer can go from browsing to placing an order, and the stored total matches the server-side calculation.
 
-### M4 — Driver delivery
+### M4 — Driver delivery 🎯 *current*
 - [ ] Available-jobs list (`READY_FOR_PICKUP` and no driver)
 - [ ] Claim a job using optimistic locking (`@Version` on `Order`) so two drivers cannot claim the same order
 - [ ] Transitions `READY_FOR_PICKUP → OUT_FOR_DELIVERY → DELIVERED`
