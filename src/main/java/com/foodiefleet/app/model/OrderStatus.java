@@ -33,4 +33,8 @@ public enum OrderStatus {
     public boolean canTransitionTo(OrderStatus next, Role actor) {
         return nextStatusesFor(actor).contains(next);
     }
+
+    public boolean isCancellableBy(Role actor) {
+        return canTransitionTo(CANCELLED, actor);
+    }
 }

@@ -139,10 +139,10 @@
                 <div th:unless="${#lists.isEmpty(menuItems)}" class="grid gap-4 sm:grid-cols-2">
                     <article th:each="item : ${menuItems}" class="card flex flex-col overflow-hidden" th:classappend="${item.available} ? '' : 'opacity-70'">
                         <div class="relative aspect-[16/9] bg-gradient-to-br from-brand-100 to-amber-100">
-                            <img th:if="${!#strings.isEmpty(item.imageUrl)}" th:src="${item.imageUrl}" th:alt="${item.name}" class="absolute inset-0 size-full object-cover" loading="lazy" />
-                            <span th:if="${#strings.isEmpty(item.imageUrl)}" class="absolute inset-0 grid place-items-center text-brand-400">
+                            <span class="absolute inset-0 grid place-items-center text-brand-400">
                                 <svg th:replace="~{fragments/icons :: coffee('size-10')}"></svg>
                             </span>
+                            <img th:if="${!#strings.isEmpty(item.imageUrl)}" th:src="${item.imageUrl}" th:alt="${item.name}" class="absolute inset-0 size-full object-cover" loading="lazy" data-fallback />
                             <span th:unless="${item.available}" class="badge absolute left-3 top-3 bg-stone-900/80 text-white">Unavailable</span>
                         </div>
                         <div class="flex flex-1 flex-col p-4">

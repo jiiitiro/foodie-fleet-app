@@ -12,6 +12,17 @@
     <span th:case="'CANCELLED'" class="badge bg-stone-200 text-stone-700"><span class="size-1.5 rounded-full bg-stone-500"></span>Cancelled</span>
 </th:block>
 
+<!-- Customer-facing step name for the order tracker -->
+<th:block th:fragment="label(status)" th:switch="${status.name()}">
+    <th:block th:case="'PLACED'">Order placed</th:block>
+    <th:block th:case="'ACCEPTED'">Accepted</th:block>
+    <th:block th:case="'PREPARING'">Preparing</th:block>
+    <th:block th:case="'READY_FOR_PICKUP'">Ready for pickup</th:block>
+    <th:block th:case="'OUT_FOR_DELIVERY'">On the way</th:block>
+    <th:block th:case="'DELIVERED'">Delivered</th:block>
+    <th:block th:case="'CANCELLED'">Cancelled</th:block>
+</th:block>
+
 <!-- Button label for moving an order to the given status -->
 <th:block th:fragment="action-label(status)" th:switch="${status.name()}">
     <th:block th:case="'ACCEPTED'">Accept</th:block>

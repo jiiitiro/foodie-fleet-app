@@ -5,6 +5,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ## [Unreleased]
 
+### Added (M3 customer ordering)
+- Restaurant browsing with search, restaurant menu pages, and a session cart (one restaurant per cart, max 20 per item).
+- Checkout with delivery address (pre-filled from the last order); prices and availability are re-checked from the database.
+- "My orders" list and order detail page with a progress tracker; customers can cancel until the restaurant accepts.
+- Order confirmation email, sent after the order is committed.
+- Customer navbar links (Restaurants, Orders, Cart with item count).
+
+### Fixed (M3)
+- Menu item images that fail to load (for example a link to a photo's web page instead of the image file) now show the placeholder icon instead of a broken image, on both the customer menu and the owner dashboard.
+
+### Security (M3)
+- Order totals are computed only from database prices; the cart never stores or accepts prices from the client.
+- Customers can only see and cancel their own orders (others return 404).
+
 ### Added (M2.5 UI design system)
 - Tailwind CSS 4 design system compiled by Maven (`frontend-maven-plugin`); output bundled into the jar and Docker image.
 - Thymeleaf Layout Dialect with `app` and `auth` layouts; shared icon, alert and order-status fragments.

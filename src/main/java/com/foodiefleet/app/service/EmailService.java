@@ -1,5 +1,6 @@
 package com.foodiefleet.app.service;
 
+import com.foodiefleet.app.event.OrderPlacedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -29,6 +30,26 @@ public class EmailService {
         message.setTo(recipientEmail);
         message.setSubject("FoodieFleet - Verify Your Account");
         message.setText("Welcome to FoodieFleet!\n\nPlease click the link below to verify your email address:\n" + confirmationUrl);
+
+        mailSender.send(message);
+    }
+
+    @Async
+    public void sendOrderConfirmation(OrderPlacedEvent order) {
+        String orderUrl = baseUrl + "/customer/orders/" + order.orderId();
+        String text = "Hi " + order.customerName() + ",\n\n"
+                + "Thanks for your order! " + order.restaurantName() + " has received it.\n\n"
+                + String.join("\n", order.lines()) + "\n"
+                + "Total: " + order.total().setScale(2).toPlainString() + "\n\n"
+                + "Delivering to: " + order.deliveryAddress() + "\n\n"
+                + "Track your order: " + orderUrl + "\n\n"
+                + "FoodieFleet";
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(order.customerEmail());
+        message.setSubject("FoodieFleet - Order #" + order.orderId() + " confirmed");
+        message.setText(text);
 
         mailSender.send(message);
     }

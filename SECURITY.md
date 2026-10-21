@@ -38,6 +38,7 @@ to stay anonymous.
 | CSRF | Spring Security default, token injected by Thymeleaf `th:action` | ✅ |
 | XSS | Thymeleaf `th:text` auto-escaping; never use `th:utext` with user data | ✅ (keep it so) |
 | SQL injection | Spring Data JPA derived queries / parameter binding only | ✅ (no native string concat) |
+| Price tampering | Cart holds only item ids + quantities; checkout prices every line from the DB | ✅ (M3) |
 | Input validation | Bean Validation on DTOs | ✅ (M1.5) |
 | Rate limiting | — | ❌ missing (S4) |
 | Secrets | Environment variables / `.env` (git-ignored) | ✅ |

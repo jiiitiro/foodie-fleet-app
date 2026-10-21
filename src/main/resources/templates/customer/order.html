@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/app}">
+<head>
+    <title th:text="'Order #' + ${order.id}">Order</title>
+</head>
+<body>
+<main layout:fragment="content" class="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6"
+      th:with="cancelled=${order.status.name() == 'CANCELLED'}">
+    <a th:href="@{/customer/orders}" class="btn btn-ghost -ml-3">
+        <svg th:replace="~{fragments/icons :: arrow-left('size-4')}"></svg> My orders
+    </a>
+    <div th:replace="~{fragments/alerts :: flash}"></div>
+
+    <!-- Status -->
+    <section class="card card-body">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <p class="text-sm text-stone-500">Order #<span th:text="${order.id}">1</span>
+                    <th:block th:if="${order.createdAt != null}">· <span th:text="${#temporals.format(order.createdAt, 'dd MMM yyyy, HH:mm')}">date</span></th:block>
+                </p>
+                <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-stone-900" th:switch="${order.status.name()}">
+                    <th:block th:case="'PLACED'">Waiting for the restaurant to accept</th:block>
+                    <th:block th:case="'ACCEPTED'">The restaurant accepted your order</th:block>
+                    <th:block th:case="'PREPARING'">Your food is being prepared</th:block>
+                    <th:block th:case="'READY_FOR_PICKUP'">Ready, waiting for a driver</th:block>
+                    <th:block th:case="'OUT_FOR_DELIVERY'">Your order is on the way</th:block>
+                    <th:block th:case="'DELIVERED'">Delivered. Enjoy your meal!</th:block>
+                    <th:block th:case="'CANCELLED'">This order was cancelled</th:block>
+                </h1>
+            </div>
+            <th:block th:replace="~{fragments/status :: badge(${order.status})}"></th:block>
+        </div>
+
+        <!-- Tracker -->
+        <ol th:unless="${cancelled}" class="mt-8 grid gap-4 sm:grid-cols-6 sm:gap-2">
+            <li th:each="step, iter : ${steps}" class="flex items-center gap-3 sm:flex-col sm:text-center"
+                th:with="done=${step.ordinal() <= order.status.ordinal()}, current=${step == order.status}">
+                <span class="grid size-9 shrink-0 place-items-center rounded-full text-sm font-bold"
+                      th:classappend="${done} ? 'bg-brand-600 text-white' : 'bg-stone-100 text-stone-400'"
+                      th:attr="aria-current=${current ? 'step' : null}">
+                    <th:block th:if="${done and !current}"><svg th:replace="~{fragments/icons :: check('size-4')}"></svg></th:block>
+                    <th:block th:unless="${done and !current}" th:text="${iter.count}">1</th:block>
+                </span>
+                <span class="text-sm" th:classappend="${current} ? 'font-bold text-stone-900' : (${done} ? 'text-stone-700' : 'text-stone-400')">
+                    <th:block th:replace="~{fragments/status :: label(${step})}"></th:block>
+                </span>
+            </li>
+        </ol>
+
+        <form th:if="${order.status.isCancellableBy(customerRole)}" th:action="@{/customer/orders/{id}/cancel(id=${order.id})}" method="post"
+              class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-stone-50 p-4" onsubmit="return confirm('Cancel this order?');">
+            <p class="text-sm text-stone-600">Changed your mind? You can cancel until the restaurant accepts the order.</p>
+            <button type="submit" class="btn btn-danger btn-sm">Cancel order</button>
+        </form>
+    </section>
+
+    <div class="grid gap-6 md:grid-cols-5">
+        <!-- Items -->
+        <section class="card md:col-span-3">
+            <header class="border-b border-stone-100 p-5">
+                <p class="text-xs text-stone-500">From</p>
+                <p class="font-bold text-stone-900" th:text="${order.restaurant.name}">Restaurant</p>
+            </header>
+            <ul class="divide-y divide-stone-100 px-5 text-sm">
+                <li th:each="orderItem : ${order.items}" class="flex justify-between gap-3 py-3">
+                    <span><span class="font-semibold text-stone-900" th:text="${orderItem.quantity} + ' ×'">1 ×</span> <span th:text="${orderItem.menuItem.name}">Item</span></span>
+                    <span class="text-stone-600" th:text="${#numbers.formatDecimal(orderItem.priceAtPurchase * orderItem.quantity, 1, 2)}">0.00</span>
+                </li>
+            </ul>
+            <footer class="flex justify-between border-t border-stone-100 p-5 font-extrabold text-stone-900">
+                <span>Total</span><span th:text="${#numbers.formatDecimal(order.totalPrice, 1, 2)}">0.00</span>
+            </footer>
+        </section>
+
+        <!-- Delivery -->
+        <section class="card card-body space-y-4 md:col-span-2">
+            <h2 class="font-bold text-stone-900">Delivery</h2>
+            <p class="flex items-start gap-2 text-sm text-stone-700">
+                <svg th:replace="~{fragments/icons :: map-pin('size-4 mt-0.5 shrink-0 text-stone-400')}"></svg>
+                <span th:text="${order.deliveryAddress}">Address</span>
+            </p>
+            <p class="flex items-start gap-2 text-sm text-stone-700">
+                <svg th:replace="~{fragments/icons :: truck('size-4 mt-0.5 shrink-0 text-stone-400')}"></svg>
+                <span th:text="${order.driver != null} ? ${order.driver.fullName} : 'A driver will be assigned when the order is ready.'">Driver</span>
+            </p>
+        </section>
+    </div>
+</main>
+</body>
+</html>

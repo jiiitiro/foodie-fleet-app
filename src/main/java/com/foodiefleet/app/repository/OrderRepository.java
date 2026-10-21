@@ -17,6 +17,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByStatus(OrderStatus status);
     List<Order> findByDriverOrderByCreatedAtDesc(User driver);
 
-    // Ownership-scoped lookup: empty if the order doesn't belong to this owner's restaurant
+    // Ownership-scoped lookups: empty if the order doesn't belong to this owner's restaurant / this customer
     Optional<Order> findByIdAndRestaurant_Owner_Id(Long id, Long ownerId);
+    Optional<Order> findByIdAndCustomer_Id(Long id, Long customerId);
+
+    // Used to pre-fill the delivery address at checkout
+    Optional<Order> findFirstByCustomerOrderByCreatedAtDesc(User customer);
 }
